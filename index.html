@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda do carro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asphalt:#21242A;
+    --asphalt-2:#2B2F36;
+    --paper:#F1F2ED;
+    --card:#FFFFFF;
+    --ink:#21242A;
+    --muted:#6B6F76;
+    --line:#D7D4C8;
+    --free:#2F8F5B;
+    --free-bg:#E4F3EA;
+    --busy:#C4432E;
+    --busy-bg:#FBE7E2;
+    --amber:#D98A1F;
+    --amber-dark:#8A5713;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding-bottom:4rem;}
+
+  .brandbar{
+    background:#FFFFFF;
+    padding:.85rem 1.5rem;
+    display:flex;
+    align-items:center;
+    border-bottom:1px solid var(--line);
+  }
+  .brandlogo{
+    height:80px;
+    width:auto;
+    display:block;
+  }
+  header.top{
+    background:var(--asphalt);
+    color:#F1EFE8;
+    padding:1.75rem 1.5rem 1.5rem;
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::after{
+    content:"";
+    position:absolute;
+    left:0;right:0;bottom:0;
+    height:6px;
+    background:repeating-linear-gradient(90deg,#F1EFE8 0 22px,transparent 22px 40px);
+    opacity:.35;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin:0 0 .35rem;
+  }
+  .headrow{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:26px;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+    margin:0;
+  }
+  .sub{
+    font-size:13px;
+    color:#B9B7AE;
+    margin:.4rem 0 0;
+  }
+  .headbtns{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;}
+  .histBtn{
+    background:transparent;
+    border:1px solid #454A52;
+    color:#F1EFE8;
+    padding:.5rem .75rem;
+    border-radius:7px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.03em;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .histBtn:hover{background:#3A3F47;}
+
+  .datebar{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    padding:1.1rem 1.5rem;
+    background:var(--asphalt-2);
+    color:#F1EFE8;
+  }
+  .datebar button{
+    background:transparent;
+    border:1px solid #454A52;
+    color:#F1EFE8;
+    width:34px;height:34px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .datebar button:hover{background:#3A3F47;}
+  .datebar .datelabel{
+    flex:1;
+    font-family:'Oswald',sans-serif;
+    font-size:16px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    text-align:center;
+  }
+  .datebar input[type=date]{
+    background:#3A3F47;
+    border:1px solid #454A52;
+    color:#F1EFE8;
+    border-radius:6px;
+    padding:.4rem .5rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color-scheme:dark;
+  }
+
+  section.content{padding:1.5rem;}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:1.1rem 1.2rem;
+    margin-bottom:1.25rem;
+  }
+  .panel h2{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    margin:0 0 .9rem;
+  }
+
+  .strip{
+    display:flex;
+    gap:2px;
+    height:34px;
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .slot{flex:1;background:var(--free-bg);position:relative;}
+  .slot.busy{background:var(--busy);}
+  .slot.free{background:var(--free-bg);}
+  .striplabels{
+    display:flex;
+    justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--muted);
+    margin-top:.4rem;
+  }
+  .legend{display:flex;gap:1.1rem;margin-top:.8rem;font-size:12px;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:.35rem;}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .dot.free{background:var(--free-bg);border:1px solid var(--free);}
+  .dot.busy{background:var(--busy);}
+
+  .util{
+    display:flex;
+    align-items:baseline;
+    gap:.4rem;
+    margin-top:.9rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .util b{font-size:15px;color:var(--ink);}
+
+  .closedmsg{
+    text-align:center;
+    padding:1.4rem .5rem;
+    color:var(--muted);
+    font-size:13.5px;
+  }
+  .actionrow{display:flex;gap:.7rem;margin-bottom:1.25rem;}
+  .actionrow .newbtn{margin-bottom:0;flex:1;}
+  .blockbtn{
+    flex:1;
+    background:var(--asphalt);
+    color:#F1EFE8;
+    border:none;
+    padding:.85rem 1rem;
+    border-radius:8px;
+    font-family:'Oswald',sans-serif;
+    font-size:14px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .blockbtn:hover{background:#33373E;}
+  .newbtn{
+    width:100%;
+    background:var(--amber);
+    color:#26170A;
+    border:none;
+    padding:.85rem 1rem;
+    border-radius:8px;
+    font-family:'Oswald',sans-serif;
+    font-size:14px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    cursor:pointer;
+    margin-bottom:1.25rem;
+  }
+  .newbtn:hover{background:#C67E17;}
+  .newbtn:active{transform:scale(.99);}
+
+  .bookings h2{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    margin:0 0 .8rem;
+  }
+  .bcard{
+    display:flex;
+    gap:1rem;
+    padding:.9rem 0;
+    border-top:1px dashed var(--line);
+  }
+  .bcard:first-of-type{border-top:none;}
+  .bcard-block{background:#F5F0E8;margin:0 -1.2rem;padding:.9rem 1.2rem;border-top:1px dashed var(--line);}
+  .btag-block{background:var(--asphalt);color:#F1EFE8;}
+  .btime{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--busy);
+    white-space:nowrap;
+    min-width:92px;
+    padding-top:.1rem;
+  }
+  .bmeta{flex:1;min-width:0;}
+  .btag{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    background:var(--free-bg);
+    color:#1F6B41;
+    padding:.15rem .45rem;
+    border-radius:4px;
+    margin-bottom:.35rem;
+  }
+  .bname{font-weight:600;font-size:14px;margin:0 0 .15rem;}
+  .bsector{font-size:12px;color:var(--muted);margin:0 0 .3rem;}
+  .bdetail{font-size:13px;color:var(--ink);margin:0 0 .15rem;line-height:1.5;}
+  .bdetail .lbl{color:var(--muted);}
+  .bdel{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:6px;
+    width:30px;height:30px;
+    cursor:pointer;
+    flex-shrink:0;
+    align-self:flex-start;
+  }
+  .bdel:hover{border-color:var(--busy);color:var(--busy);}
+
+  .empty{
+    text-align:center;
+    padding:1.5rem 1rem;
+    color:var(--muted);
+    font-size:13.5px;
+  }
+  .empty b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:.25rem;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
+
+  .recbanner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:.8rem;
+    background:var(--free-bg);
+    color:#1F6B41;
+    border:1px solid #BEE0CB;
+    border-radius:8px;
+    padding:.6rem .8rem;
+    margin-bottom:1rem;
+    font-size:12.5px;
+  }
+  .recbanner i{font-style:normal;color:var(--free);}
+  .recbanner button{
+    background:transparent;
+    border:1px solid #1F6B41;
+    color:#1F6B41;
+    border-radius:6px;
+    padding:.3rem .6rem;
+    font-size:11px;
+    cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .usebox{
+    margin-top:.5rem;
+    padding-top:.6rem;
+    border-top:1px dashed var(--line);
+    font-size:12px;
+  }
+  .usebox .uselog{color:var(--muted);}
+  .usebox .uselog b{color:var(--ink);font-weight:600;}
+  .usebox .useflag{
+    display:inline-block;
+    margin-left:.4rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    padding:.05rem .35rem;
+    border-radius:4px;
+  }
+  .useflag.early{background:var(--free-bg);color:#1F6B41;}
+  .useflag.late{background:var(--busy-bg);color:var(--busy);}
+  .recform{display:flex;gap:.6rem;align-items:flex-end;margin-top:.6rem;flex-wrap:wrap;}
+  .recform .rf{display:flex;flex-direction:column;gap:.25rem;}
+  .recform label{font-size:11px;color:var(--muted);}
+  .recform input[type=time]{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:.4rem .5rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .recform button{
+    background:var(--amber);
+    color:#26170A;
+    border:none;
+    border-radius:6px;
+    padding:.45rem .8rem;
+    font-family:'Oswald',sans-serif;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    cursor:pointer;
+  }
+  .loading{padding:2rem;text-align:center;color:var(--muted);font-size:13px;font-family:'JetBrains Mono',monospace;}
+
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(33,36,42,.55);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .overlay.open{display:flex;}
+  @media (min-width:640px){.overlay{align-items:center;}}
+
+  .modal{
+    background:var(--card);
+    width:100%;
+    max-width:480px;
+    border-radius:14px 14px 0 0;
+    padding:1.4rem 1.4rem 1.6rem;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  @media (min-width:640px){.modal{border-radius:14px;}}
+  .modal h3{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    font-size:16px;
+    letter-spacing:.02em;
+    margin:0 0 1rem;
+  }
+  .field{margin-bottom:.9rem;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:.3rem;
+    font-weight:500;
+  }
+  .field input,.field textarea,.field select{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:.6rem .7rem;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--amber);outline-offset:1px;}
+  .row2{display:flex;gap:.7rem;}
+  .row2 .field{flex:1;}
+  textarea{resize:vertical;min-height:56px;font-family:'Inter',sans-serif;}
+  .userhint{
+    font-size:11.5px;
+    color:var(--muted);
+    margin:-.5rem 0 .8rem;
+  }
+  .userhint.newuser{color:var(--amber-dark);}
+  .userhint.knownuser{color:#1F6B41;}
+  .field input[readonly]{background:#EDEBE3;color:var(--muted);}
+  .sectiontitle{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    margin:1.1rem 0 .6rem;
+    padding-top:.7rem;
+    border-top:1px dashed var(--line);
+  }
+  .sectiontitle:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+  .errbox{
+    background:var(--busy-bg);
+    color:var(--busy);
+    font-size:12.5px;
+    padding:.6rem .7rem;
+    border-radius:7px;
+    margin-bottom:.9rem;
+    display:none;
+  }
+  .modalbtns{display:flex;gap:.6rem;margin-top:1.1rem;}
+  .modalbtns button{
+    flex:1;
+    padding:.7rem;
+    border-radius:8px;
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    cursor:pointer;
+    border:none;
+  }
+  .btn-cancel{background:var(--paper);border:1px solid var(--line) !important;color:var(--muted);}
+  .btn-save{background:var(--amber);color:#26170A;}
+  .btn-save:disabled{opacity:.6;cursor:default;}
+
+  .histcard{
+    padding:.8rem 0;
+    border-top:1px dashed var(--line);
+  }
+  .histcard:first-of-type{border-top:none;}
+  .histtop{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.25rem;}
+  .histdate{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink);font-weight:600;}
+  .histstatus{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    padding:.1rem .4rem;
+    border-radius:4px;
+  }
+  .histstatus.ativo{background:var(--free-bg);color:#1F6B41;}
+  .histstatus.cancelado{background:var(--busy-bg);color:var(--busy);}
+  .histbody{font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .histbody b{color:var(--ink);font-weight:600;}
+
+  .toast{
+    position:fixed;
+    left:50%;bottom:1.2rem;
+    transform:translateX(-50%);
+    background:var(--asphalt);
+    color:#F1EFE8;
+    padding:.7rem 1.1rem;
+    border-radius:8px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+    z-index:80;
+    max-width:90%;
+    text-align:center;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandbar">
+    <img src="data:image/png;base64,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" alt="Lopes Premier" class="brandlogo">
+  </div>
+  <header class="top">
+    <div class="headrow">
+      <div>
+        <p class="eyebrow">Painel de reservas</p>
+        <h1>Agenda do carro</h1>
+        <p class="sub">Veículo da unidade &middot; visível para toda a equipe</p>
+      </div>
+      <div class="headbtns">
+        <button class="histBtn" id="openReception">Recepção</button>
+        <button class="histBtn" id="openHistory">Histórico</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="datebar">
+    <button id="prevDay" aria-label="Dia anterior">‹</button>
+    <div class="datelabel" id="dateLabel">—</div>
+    <button id="nextDay" aria-label="Próximo dia">›</button>
+    <input type="date" id="datePicker">
+  </div>
+
+  <section class="content">
+    <div class="panel">
+      <h2 id="stripHeading">Ocupação do dia</h2>
+      <div id="stripArea">
+        <div class="strip" id="strip"></div>
+        <div class="striplabels" id="stripLabels"></div>
+        <div class="legend">
+          <span><i class="dot free"></i>Livre</span>
+          <span><i class="dot busy"></i>Ocupado</span>
+        </div>
+        <div class="util" id="utilLine"></div>
+      </div>
+      <div id="closedMsg" class="closedmsg" style="display:none;">O carro não fica disponível aos domingos.</div>
+    </div>
+
+    <div class="recbanner" id="receptionBanner" style="display:none;">
+      <span><i>●</i> Modo recepção ativo — registre retirada e devolução nas reservas abaixo</span>
+      <button id="exitReception">Sair</button>
+    </div>
+
+    <div class="actionrow">
+      <button class="newbtn" id="openModal">+ Novo agendamento</button>
+      <button class="blockbtn" id="openBlockModal" style="display:none;">Bloquear horário</button>
+    </div>
+
+    <div class="panel bookings">
+      <h2>Reservas do dia</h2>
+      <div id="bookingsList"><div class="loading">Carregando agenda…</div></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Reservar o carro</h3>
+    <div class="errbox" id="errbox"></div>
+
+    <div class="sectiontitle">Quem reserva</div>
+    <div class="field">
+      <label for="fName">Seu nome</label>
+      <input type="text" id="fName" placeholder="Nome completo" autocomplete="off">
+    </div>
+    <p class="userhint" id="userHint"></p>
+    <div class="row2">
+      <div class="field">
+        <label for="fSector">Setor / ramal</label>
+        <input type="text" id="fSector" placeholder="Ex: Comercial, ramal 234">
+      </div>
+      <div class="field">
+        <label for="fUserPin">PIN pessoal</label>
+        <input type="password" id="fUserPin" inputmode="numeric" placeholder="4 dígitos" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="sectiontitle">Horário</div>
+    <div class="row2">
+      <div class="field">
+        <label for="fStart">Início</label>
+        <input type="time" id="fStart" min="08:00" max="18:00" step="900" value="08:00">
+      </div>
+      <div class="field">
+        <label for="fEnd">Término</label>
+        <input type="time" id="fEnd" min="08:00" max="18:00" step="900" value="09:00">
+      </div>
+    </div>
+
+    <div class="sectiontitle">Finalidade do uso</div>
+    <div class="field">
+      <label for="fType">Tipo</label>
+      <select id="fType">
+        <option value="visita">Visita</option>
+        <option value="fotografia">Fotografia</option>
+        <option value="captacao">Captação</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="field" id="fTypeDetailWrap">
+      <label id="fTypeDetailLabel" for="fTypeDetail">Referência do imóvel</label>
+      <input type="text" id="fTypeDetail" placeholder="Código ou referência do imóvel">
+    </div>
+    <div class="field">
+      <label for="fAddress">Endereço de destino</label>
+      <input type="text" id="fAddress" placeholder="Rua, número, bairro">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="fClientName">Nome do cliente</label>
+        <input type="text" id="fClientName" placeholder="Nome do cliente">
+      </div>
+      <div class="field">
+        <label for="fClientPhone">Telefone do cliente</label>
+        <input type="text" id="fClientPhone" placeholder="(11) 90000-0000">
+      </div>
+    </div>
+
+    <div class="modalbtns">
+      <button class="btn-cancel" id="cancelModal">Cancelar</button>
+      <button class="btn-save" id="saveBooking">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="blockOverlay">
+  <div class="modal">
+    <h3>Bloquear horário</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 1rem;">Use para manutenção, revisão ou qualquer período em que o carro não deve ser reservado. Visível para todos, removível apenas por admin ou recepção.</p>
+    <div class="errbox" id="blockErrbox"></div>
+    <div class="row2">
+      <div class="field">
+        <label for="fBlockStart">Início</label>
+        <input type="time" id="fBlockStart" step="900">
+      </div>
+      <div class="field">
+        <label for="fBlockEnd">Término</label>
+        <input type="time" id="fBlockEnd" step="900">
+      </div>
+    </div>
+    <div class="field">
+      <label for="fBlockReason">Motivo do bloqueio</label>
+      <input type="text" id="fBlockReason" placeholder="Ex: Revisão / manutenção preventiva">
+    </div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="cancelBlock">Cancelar</button>
+      <button class="btn-save" id="saveBlock">Bloquear</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <h3>Cancelar reserva</h3>
+    <p id="confirmText" style="font-size:13.5px;color:var(--ink);margin:0 0 1rem;line-height:1.6;">Tem certeza que deseja cancelar esta reserva? O registro será mantido no histórico como cancelado.</p>
+    <div class="errbox" id="confirmErrbox"></div>
+    <div class="field" id="confirmNameWrap">
+      <label id="confirmNameLabel" for="fConfirmName">PIN pessoal</label>
+      <input type="password" id="fConfirmName" inputmode="numeric" placeholder="4 dígitos" autocomplete="off">
+    </div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="confirmNo">Voltar</button>
+      <button class="btn-save" id="confirmYes" style="background:var(--busy);color:#fff;">Cancelar reserva</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="receptionPinOverlay">
+  <div class="modal">
+    <h3>Acesso da recepção</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 1rem;">Informe o PIN da recepção para registrar retirada e devolução do carro.</p>
+    <div class="errbox" id="receptionPinErrbox"></div>
+    <div class="field">
+      <label for="fReceptionPin">PIN da recepção</label>
+      <input type="password" id="fReceptionPin" inputmode="numeric" placeholder="••••" autocomplete="off">
+    </div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="cancelReceptionPin">Cancelar</button>
+      <button class="btn-save" id="submitReceptionPin">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pinOverlay">
+  <div class="modal">
+    <h3>Acesso restrito</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 1rem;">O histórico é visível apenas para o perfil admin. Informe o PIN de acesso.</p>
+    <div class="errbox" id="pinErrbox"></div>
+    <div class="field">
+      <label for="fPin">PIN de admin</label>
+      <input type="password" id="fPin" inputmode="numeric" placeholder="••••" autocomplete="off">
+    </div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="cancelPin">Cancelar</button>
+      <button class="btn-save" id="submitPin">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="histOverlay">
+  <div class="modal">
+    <h3>Histórico de reservas <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;">(somente leitura)</span></h3>
+    <div id="histList"><div class="loading">Carregando histórico…</div></div>
+    <div class="sectiontitle" style="margin-top:1.4rem;">Usuários cadastrados</div>
+    <div id="usersList"></div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="closeHistory">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const STORAGE_KEY = 'bookings-by-date';
+const HOURS_WEEKDAY = {start: 8*60, end: 18*60};
+const HOURS_SATURDAY = {start: 9*60, end: 12*60};
+const WEEKDAYS = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const MONTHS_FULL = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const MONTHS_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const TYPE_LABELS = {visita:'Visita', fotografia:'Fotografia', captacao:'Captação', outro:'Outro', bloqueio:'Bloqueio'};
+const TYPE_DETAIL_LABEL = {
+  visita: 'Referência do imóvel',
+  fotografia: 'Detalhe (opcional)',
+  captacao: 'Detalhe (opcional)',
+  outro: 'Descreva a finalidade'
+};
+const ADMIN_PIN = '2026';
+let isAdminUnlocked = false;
+const RECEPTION_PIN = '4321';
+let isReceptionUnlocked = false;
+
+function getDayHours(dateISO){
+  const dow = parseISODate(dateISO).getDay();
+  if(dow === 0) return {start:null, end:null, closed:true};
+  if(dow === 6) return {start: HOURS_SATURDAY.start, end: HOURS_SATURDAY.end, closed:false};
+  return {start: HOURS_WEEKDAY.start, end: HOURS_WEEKDAY.end, closed:false};
+}
+function canManage(){
+  return isAdminUnlocked || isReceptionUnlocked;
+}
+
+function effWindow(b){
+  const s = b.actualStart ? timeToMin(b.actualStart) : timeToMin(b.start);
+  let e = b.actualEnd ? timeToMin(b.actualEnd) : timeToMin(b.end);
+  if(e < s) e = s;
+  return [s, e];
+}
+
+function validateAddress(address){
+  if(!/\d/.test(address)){
+    return 'Inclua o número do imóvel no endereço de destino.';
+  }
+  return null;
+}
+function validatePhone(phone){
+  if(/[a-zA-Z]/.test(phone)){
+    return 'Telefone não deve conter letras.';
+  }
+  const digits = phone.replace(/\D/g, '');
+  if(digits.length < 8){
+    return 'Telefone inválido. Informe DDD e número completo.';
+  }
+  if(/^(\d)\1+$/.test(digits)){
+    return 'Telefone inválido: número com o mesmo dígito repetido.';
+  }
+  return null;
+}
+
+let allBookings = {};
+let todayISO = toISODate(new Date());
+let selectedDate = todayISO;
+let pendingCancelId = null;
+let pendingCancelDate = null;
+let pendingCancelName = null;
+let pendingCancelIsBlock = false;
+
+function toISODate(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseISODate(iso){
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function fmtLabel(iso){
+  const d = parseISODate(iso);
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} de ${MONTHS_FULL[d.getMonth()]}`.toUpperCase();
+}
+function fmtShort(iso){
+  const d = parseISODate(iso);
+  return `${String(d.getDate()).padStart(2,'0')} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+}
+function timeToMin(t){
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+function minToTime(min){
+  const h = Math.floor(min/60);
+  const m = min%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+/* ====== CONFIGURAÇÃO DO SUPABASE ======
+   Preencha com os dados do seu projeto (Supabase > Project Settings > API).
+   Veja as instruções completas de configuração no fim desta mensagem. */
+const SUPABASE_URL = 'https://hneiytaodmfuwhkhmxcc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_xwrMxJzBXCRioc_quqMTIQ_Xp-oGgkn';
+/* ======================================== */
+
+let supabaseClient = null;
+let supabaseReady = false;
+try{
+  if(SUPABASE_URL.startsWith('http') && SUPABASE_ANON_KEY.length > 20){
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseReady = true;
+  }
+}catch(e){
+  supabaseReady = false;
+}
+
+function showConfigWarning(){
+  const wrap = document.querySelector('.wrap');
+  const warn = document.createElement('div');
+  warn.style.cssText = 'background:#FBE7E2;color:#8A2A1A;padding:1rem 1.25rem;margin:1rem 1.5rem;border-radius:8px;font-size:13.5px;line-height:1.6;font-family:Inter,sans-serif;';
+  warn.innerHTML = '<b>Supabase não configurado.</b> Edite as constantes SUPABASE_URL e SUPABASE_ANON_KEY no início do código-fonte com os dados do seu projeto Supabase para a agenda funcionar.';
+  wrap.insertBefore(warn, wrap.firstChild.nextSibling);
+}
+
+async function getStoredValue(key, fallback){
+  if(!supabaseReady) return fallback;
+  try{
+    const { data, error } = await supabaseClient
+      .from('app_storage')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+    if(error || !data) return fallback;
+    return data.value || fallback;
+  }catch(e){
+    return fallback;
+  }
+}
+async function setStoredValue(key, value){
+  if(!supabaseReady) return false;
+  try{
+    const { error } = await supabaseClient
+      .from('app_storage')
+      .upsert({ key, value, updated_at: new Date().toISOString() });
+    return !error;
+  }catch(e){
+    return false;
+  }
+}
+
+async function loadBookings(){
+  allBookings = await getStoredValue(STORAGE_KEY, {});
+}
+async function saveBookings(){
+  await setStoredValue(STORAGE_KEY, allBookings);
+}
+
+const USERS_KEY = 'registered-users';
+let users = {};
+
+function userKey(name){
+  return name.trim().toLowerCase();
+}
+async function loadUsers(){
+  users = await getStoredValue(USERS_KEY, {});
+}
+async function saveUsers(){
+  await setStoredValue(USERS_KEY, users);
+}
+function findUser(name){
+  return users[userKey(name)] || null;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+function activeOf(dateISO){
+  return (allBookings[dateISO] || []).filter(b => b.status !== 'cancelado');
+}
+
+function renderDateLabel(){
+  document.getElementById('dateLabel').textContent = fmtLabel(selectedDate);
+  document.getElementById('datePicker').value = selectedDate;
+  const prevBtn = document.getElementById('prevDay');
+  const atToday = selectedDate <= todayISO;
+  prevBtn.disabled = atToday;
+  prevBtn.style.opacity = atToday ? '.35' : '1';
+  prevBtn.style.cursor = atToday ? 'default' : 'pointer';
+}
+
+function renderStrip(){
+  const hours = getDayHours(selectedDate);
+  const stripArea = document.getElementById('stripArea');
+  const closedMsg = document.getElementById('closedMsg');
+  const heading = document.getElementById('stripHeading');
+
+  if(hours.closed){
+    stripArea.style.display = 'none';
+    closedMsg.style.display = 'block';
+    heading.textContent = 'Ocupação do dia \u2014 fechado';
+    return;
+  }
+  stripArea.style.display = 'block';
+  closedMsg.style.display = 'none';
+  heading.textContent = `Ocupação do dia (${minToTime(hours.start)} \u2013 ${minToTime(hours.end)})`;
+
+  const stripLabels = document.getElementById('stripLabels');
+  const step = (hours.end - hours.start) > 4*60 ? 120 : 60;
+  const labelSpans = [];
+  for(let t=hours.start; t<=hours.end; t+=step){
+    labelSpans.push(`<span>${Math.floor(t/60)}h</span>`);
+  }
+  stripLabels.innerHTML = labelSpans.join('');
+
+  const strip = document.getElementById('strip');
+  strip.innerHTML = '';
+  const dayBookings = activeOf(selectedDate);
+  const slotCount = (hours.end - hours.start) / 30;
+  let busyMinutes = 0;
+  for(let i=0;i<slotCount;i++){
+    const slotStart = hours.start + i*30;
+    const slotEnd = slotStart + 30;
+    const hit = dayBookings.find(b => {
+      const [s,e] = effWindow(b);
+      return s < slotEnd && e > slotStart;
+    });
+    const div = document.createElement('div');
+    div.className = 'slot ' + (hit ? 'busy' : 'free');
+    if(hit){
+      const [s,e] = effWindow(hit);
+      div.title = `${minToTime(s)}\u2013${minToTime(e)} \u00b7 ${hit.name} \u00b7 ${TYPE_LABELS[hit.type]}`;
+      busyMinutes += 30;
+    }else{
+      div.title = `${minToTime(slotStart)}\u2013${minToTime(slotEnd)} livre`;
+    }
+    strip.appendChild(div);
+  }
+  const totalHours = (hours.end - hours.start)/60;
+  const busyHours = (busyMinutes/60).toFixed(1).replace(/\.0$/,'');
+  document.getElementById('utilLine').innerHTML =
+    `<b>${busyHours}h</b> ocupadas de ${totalHours}h disponíveis`;
+}
+
+function fmtDiffTag(scheduled, actual){
+  const diff = timeToMin(actual) - timeToMin(scheduled);
+  if(diff === 0) return '';
+  const abs = Math.abs(diff);
+  return diff > 0
+    ? `<span class="useflag late">${abs}min atraso</span>`
+    : `<span class="useflag early">${abs}min adiantado</span>`;
+}
+
+function renderBookingsList(){
+  const list = document.getElementById('bookingsList');
+  const dayBookings = activeOf(selectedDate).slice().sort((a,b)=>timeToMin(a.start)-timeToMin(b.start));
+  if(dayBookings.length === 0){
+    list.innerHTML = `<div class="empty"><b>Nenhuma reserva neste dia</b>O carro está livre o dia todo. Que tal ser o primeiro a agendar?</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  dayBookings.forEach(b=>{
+    const card = document.createElement('div');
+    card.className = 'bcard' + (b.isBlock ? ' bcard-block' : '');
+
+    if(b.isBlock){
+      const showDel = canManage();
+      card.innerHTML = `
+        <div class="btime">${b.start}\u2013${b.end}</div>
+        <div class="bmeta">
+          <span class="btag btag-block">Bloqueio</span>
+          <p class="bname">${escapeHtml(b.typeDetail || 'Sem motivo informado')}</p>
+          <p class="bsector">Bloqueado por ${escapeHtml(b.name)}</p>
+        </div>
+        ${showDel ? `<button class="bdel" aria-label="Remover bloqueio" data-id="${b.id}">\u2715</button>` : ''}
+      `;
+      list.appendChild(card);
+      if(showDel){
+        card.querySelector('.bdel').addEventListener('click', ()=>{
+          pendingCancelId = b.id;
+          pendingCancelDate = selectedDate;
+          pendingCancelName = b.name;
+          pendingCancelIsBlock = true;
+          openCancelConfirm();
+        });
+      }
+      return;
+    }
+
+    const detailLine = b.typeDetail
+      ? `<p class="bdetail"><span class="lbl">${b.type==='visita' ? 'Imóvel:' : (b.type==='outro' ? 'Descrição:' : 'Detalhe:')}</span> ${escapeHtml(b.typeDetail)}</p>`
+      : '';
+
+    let usageLine = '';
+    if(b.actualStart || b.actualEnd){
+      const parts = [];
+      if(b.actualStart) parts.push(`Retirado <b>${b.actualStart}</b>${fmtDiffTag(b.start, b.actualStart)}`);
+      if(b.actualEnd) parts.push(`Devolvido <b>${b.actualEnd}</b>${fmtDiffTag(b.end, b.actualEnd)}`);
+      usageLine = `<div class="usebox uselog">${parts.join(' &middot; ')}</div>`;
+    }
+
+    let recForm = '';
+    if(isReceptionUnlocked){
+      recForm = `
+        <div class="usebox">
+          <div class="recform">
+            <div class="rf">
+              <label>Retirada real</label>
+              <input type="time" class="recStart" data-id="${b.id}" value="${b.actualStart || ''}">
+            </div>
+            <div class="rf">
+              <label>Devolução real</label>
+              <input type="time" class="recEnd" data-id="${b.id}" value="${b.actualEnd || ''}">
+            </div>
+            <button class="recSave" data-id="${b.id}">Salvar</button>
+          </div>
+        </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="btime">${b.start}\u2013${b.end}</div>
+      <div class="bmeta">
+        <span class="btag">${TYPE_LABELS[b.type] || 'Outro'}</span>
+        <p class="bname">${escapeHtml(b.name)}</p>
+        ${b.sector ? `<p class="bsector">${escapeHtml(b.sector)}</p>` : ''}
+        ${detailLine}
+        <p class="bdetail"><span class="lbl">Destino:</span> ${escapeHtml(b.address || '\u2014')}</p>
+        <p class="bdetail"><span class="lbl">Cliente:</span> ${escapeHtml(b.clientName || '\u2014')}${b.clientPhone ? ' \u00b7 ' + escapeHtml(b.clientPhone) : ''}</p>
+        ${usageLine}
+        ${recForm}
+      </div>
+      <button class="bdel" aria-label="Cancelar reserva" data-id="${b.id}">\u2715</button>
+    `;
+    list.appendChild(card);
+    card.querySelector('.bdel').addEventListener('click', ()=>{
+      pendingCancelId = b.id;
+      pendingCancelDate = selectedDate;
+      pendingCancelName = b.name;
+      pendingCancelIsBlock = false;
+      openCancelConfirm();
+    });
+  });
+  list.querySelectorAll('.recSave').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.id;
+      const card = btn.closest('.bcard');
+      const startVal = card.querySelector('.recStart').value;
+      const endVal = card.querySelector('.recEnd').value;
+      btn.disabled = true;
+      btn.textContent = 'Salvando…';
+      try{
+        await loadBookings();
+        const arr = allBookings[selectedDate] || [];
+        const idx = arr.findIndex(x=>x.id === id);
+        if(idx > -1){
+          if(startVal) arr[idx].actualStart = startVal; else delete arr[idx].actualStart;
+          if(endVal) arr[idx].actualEnd = endVal; else delete arr[idx].actualEnd;
+          arr[idx].loggedAt = new Date().toISOString();
+        }
+        allBookings[selectedDate] = arr;
+        await saveBookings();
+        renderAll();
+        showToast('Retirada/devolução registrada. Horário original preservado.');
+      }catch(e){
+        showToast('Não foi possível salvar o registro. Tente novamente.');
+        btn.disabled = false;
+        btn.textContent = 'Salvar';
+      }
+    });
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : s;
+  return d.innerHTML;
+}
+
+function renderAll(){
+  renderDateLabel();
+  renderStrip();
+  renderBookingsList();
+  updateActionButtons();
+}
+
+function updateActionButtons(){
+  const hours = getDayHours(selectedDate);
+  const openModalBtn = document.getElementById('openModal');
+  const openBlockBtn = document.getElementById('openBlockModal');
+  if(hours.closed){
+    openModalBtn.disabled = true;
+    openModalBtn.style.opacity = '.45';
+    openModalBtn.style.cursor = 'default';
+  }else{
+    openModalBtn.disabled = false;
+    openModalBtn.style.opacity = '1';
+    openModalBtn.style.cursor = 'pointer';
+  }
+  openBlockBtn.style.display = (canManage() && !hours.closed) ? 'block' : 'none';
+}
+
+async function init(){
+  if(!supabaseReady) showConfigWarning();
+  await loadBookings();
+  await loadUsers();
+  renderAll();
+}
+init();
+
+document.getElementById('datePicker').min = todayISO;
+
+document.getElementById('prevDay').addEventListener('click', async ()=>{
+  const d = parseISODate(selectedDate);
+  d.setDate(d.getDate()-1);
+  const candidate = toISODate(d);
+  if(candidate < todayISO) return;
+  selectedDate = candidate;
+  await loadBookings();
+  renderAll();
+});
+document.getElementById('nextDay').addEventListener('click', async ()=>{
+  const d = parseISODate(selectedDate);
+  d.setDate(d.getDate()+1);
+  selectedDate = toISODate(d);
+  await loadBookings();
+  renderAll();
+});
+document.getElementById('datePicker').addEventListener('change', async (e)=>{
+  if(e.target.value){
+    if(e.target.value < todayISO){
+      e.target.value = selectedDate;
+      showToast('Não é possível selecionar datas anteriores a hoje.');
+      return;
+    }
+    selectedDate = e.target.value;
+    await loadBookings();
+    renderAll();
+  }
+});
+
+const confirmOverlay = document.getElementById('confirmOverlay');
+
+async function openCancelConfirm(){
+  await loadUsers();
+  const errbox = document.getElementById('confirmErrbox');
+  const nameWrap = document.getElementById('confirmNameWrap');
+  const nameLabel = document.getElementById('confirmNameLabel');
+  const nameInput = document.getElementById('fConfirmName');
+  const text = document.getElementById('confirmText');
+  errbox.style.display = 'none';
+  nameInput.value = '';
+  if(pendingCancelIsBlock){
+    nameWrap.style.display = 'none';
+    text.textContent = 'Remover este bloqueio de horário? A agenda volta a ficar disponível nesse período.';
+  }else if(isReceptionUnlocked){
+    nameWrap.style.display = 'none';
+    text.textContent = 'Cancelar como recepção. O registro será mantido no histórico como cancelado.';
+  }else{
+    nameWrap.style.display = 'block';
+    const owner = findUser(pendingCancelName || '');
+    if(owner){
+      nameLabel.textContent = 'PIN pessoal';
+      nameInput.type = 'password';
+      nameInput.placeholder = '4 dígitos';
+      text.textContent = 'Somente quem fez o agendamento pode cancelá-lo (ou a recepção). Informe o seu PIN para confirmar.';
+    }else{
+      nameLabel.textContent = 'Digite o nome usado no agendamento';
+      nameInput.type = 'text';
+      nameInput.placeholder = 'Nome de quem reservou';
+      text.textContent = 'Esta reserva foi feita antes do cadastro de usuários. Confirme digitando o nome usado no agendamento.';
+    }
+  }
+  confirmOverlay.classList.add('open');
+}
+
+function resetPendingCancel(){
+  pendingCancelId = null;
+  pendingCancelDate = null;
+  pendingCancelName = null;
+  pendingCancelIsBlock = false;
+  confirmOverlay.classList.remove('open');
+}
+
+document.getElementById('confirmNo').addEventListener('click', resetPendingCancel);
+confirmOverlay.addEventListener('click', (e)=>{
+  if(e.target === confirmOverlay) resetPendingCancel();
+});
+document.getElementById('confirmYes').addEventListener('click', async ()=>{
+  const errbox = document.getElementById('confirmErrbox');
+  errbox.style.display = 'none';
+  if(!pendingCancelId || !pendingCancelDate){
+    confirmOverlay.classList.remove('open');
+    return;
+  }
+  if(pendingCancelIsBlock){
+    if(!canManage()){
+      errbox.textContent = 'Apenas admin ou recepção podem remover bloqueios.';
+      errbox.style.display = 'block';
+      return;
+    }
+  }else if(!isReceptionUnlocked){
+    const typed = document.getElementById('fConfirmName').value.trim();
+    const owner = findUser(pendingCancelName || '');
+    if(!typed){
+      errbox.textContent = owner ? 'Digite seu PIN para confirmar.' : 'Digite o nome usado no agendamento para confirmar.';
+      errbox.style.display = 'block';
+      return;
+    }
+    if(owner){
+      if(typed !== owner.pin){
+        errbox.textContent = 'PIN incorreto. Só quem agendou (ou a recepção) pode cancelar.';
+        errbox.style.display = 'block';
+        return;
+      }
+    }else{
+      if(typed.toLowerCase() !== (pendingCancelName || '').trim().toLowerCase()){
+        errbox.textContent = 'Nome não confere com o responsável pela reserva.';
+        errbox.style.display = 'block';
+        return;
+      }
+    }
+  }
+  const id = pendingCancelId;
+  const dateISO = pendingCancelDate;
+  await loadBookings();
+  const arr = allBookings[dateISO] || [];
+  const idx = arr.findIndex(x=>x.id === id);
+  if(idx > -1){
+    arr[idx].status = 'cancelado';
+    arr[idx].cancelledAt = new Date().toISOString();
+    arr[idx].cancelledBy = pendingCancelIsBlock ? (isAdminUnlocked ? 'admin' : 'recepção') : (isReceptionUnlocked ? 'recepção' : arr[idx].name);
+  }
+  allBookings[dateISO] = arr;
+  await saveBookings();
+  const wasBlock = pendingCancelIsBlock;
+  resetPendingCancel();
+  if(dateISO === selectedDate) renderAll();
+  showToast(wasBlock ? 'Bloqueio removido' : 'Reserva cancelada e arquivada no histórico');
+});
+
+const blockOverlay = document.getElementById('blockOverlay');
+document.getElementById('openBlockModal').addEventListener('click', ()=>{
+  if(!canManage()) return;
+  const hours = getDayHours(selectedDate);
+  if(hours.closed){
+    showToast('O carro não fica disponível aos domingos.');
+    return;
+  }
+  document.getElementById('blockErrbox').style.display = 'none';
+  const bs = document.getElementById('fBlockStart');
+  const be = document.getElementById('fBlockEnd');
+  bs.min = minToTime(hours.start);
+  bs.max = minToTime(hours.end);
+  be.min = minToTime(hours.start);
+  be.max = minToTime(hours.end);
+  bs.value = minToTime(hours.start);
+  be.value = minToTime(hours.end);
+  document.getElementById('fBlockReason').value = '';
+  blockOverlay.classList.add('open');
+});
+document.getElementById('cancelBlock').addEventListener('click', ()=>{
+  blockOverlay.classList.remove('open');
+});
+blockOverlay.addEventListener('click', (e)=>{
+  if(e.target === blockOverlay) blockOverlay.classList.remove('open');
+});
+document.getElementById('saveBlock').addEventListener('click', async ()=>{
+  const errbox = document.getElementById('blockErrbox');
+  errbox.style.display = 'none';
+  function failBlock(msg){
+    errbox.textContent = msg;
+    errbox.style.display = 'block';
+  }
+  if(!canManage()) return failBlock('Apenas admin ou recepção podem bloquear horários.');
+  const start = document.getElementById('fBlockStart').value;
+  const end = document.getElementById('fBlockEnd').value;
+  const reason = document.getElementById('fBlockReason').value.trim();
+  if(!start || !end) return failBlock('Informe o horário de início e término.');
+  const sMin = timeToMin(start), eMin = timeToMin(end);
+  const hours = getDayHours(selectedDate);
+  if(hours.closed) return failBlock('O carro não fica disponível aos domingos.');
+  if(sMin < hours.start || eMin > hours.end){
+    return failBlock(`Horário deve estar entre ${minToTime(hours.start)} e ${minToTime(hours.end)}.`);
+  }
+  if(sMin >= eMin) return failBlock('O horário de término deve ser depois do início.');
+  if(!reason) return failBlock('Descreva o motivo do bloqueio.');
+
+  const btn = document.getElementById('saveBlock');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+  try{
+    await loadBookings();
+    const dayBookings = allBookings[selectedDate] || [];
+    const activeDay = dayBookings.filter(b => b.status !== 'cancelado');
+    const overlap = activeDay.find(b => {
+      const [s,e] = effWindow(b);
+      return sMin < e && eMin > s;
+    });
+    if(overlap){
+      failBlock(`Conflito com a reserva de ${overlap.name} (${overlap.start}\u2013${overlap.end}).`);
+      btn.disabled = false;
+      btn.textContent = 'Bloquear';
+      return;
+    }
+    const block = {
+      id: 'k_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name: isAdminUnlocked ? 'Administração' : 'Recepção',
+      sector: '', start, end,
+      type: 'bloqueio', typeDetail: reason,
+      address: '', clientName: '', clientPhone: '',
+      status: 'ativo',
+      isBlock: true,
+      createdAt: new Date().toISOString()
+    };
+    allBookings[selectedDate] = [...dayBookings, block];
+    await saveBookings();
+    blockOverlay.classList.remove('open');
+    renderAll();
+    showToast('Horário bloqueado');
+  }catch(e){
+    failBlock('Não foi possível salvar o bloqueio. Tente novamente.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Bloquear';
+  }
+});
+
+const overlay = document.getElementById('overlay');
+const fType = document.getElementById('fType');
+const fTypeDetailLabel = document.getElementById('fTypeDetailLabel');
+const fTypeDetail = document.getElementById('fTypeDetail');
+
+function updateTypeDetailField(){
+  const t = fType.value;
+  fTypeDetailLabel.textContent = TYPE_DETAIL_LABEL[t];
+  fTypeDetail.placeholder = t === 'visita' ? 'Código ou referência do imóvel' : (t === 'outro' ? 'Descreva o motivo do uso' : 'Observação (opcional)');
+}
+fType.addEventListener('change', updateTypeDetailField);
+
+function updateUserHint(){
+  const nameVal = document.getElementById('fName').value.trim();
+  const hint = document.getElementById('userHint');
+  const sectorInput = document.getElementById('fSector');
+  if(!nameVal){
+    hint.textContent = '';
+    hint.className = 'userhint';
+    sectorInput.readOnly = false;
+    sectorInput.value = '';
+    return;
+  }
+  const u = findUser(nameVal);
+  if(u){
+    hint.textContent = `Usuário cadastrado \u00b7 informe seu PIN para confirmar.`;
+    hint.className = 'userhint knownuser';
+    sectorInput.value = u.sector || '';
+    sectorInput.readOnly = true;
+  }else{
+    hint.innerHTML = `Nome novo \u00b7 preencha o setor e crie um PIN de 4 dígitos. <b>Guarde esse PIN</b> \u2014 ele será pedido sempre que você agendar ou cancelar o uso do carro.`;
+    hint.className = 'userhint newuser';
+    sectorInput.readOnly = false;
+  }
+}
+document.getElementById('fName').addEventListener('input', updateUserHint);
+document.getElementById('fName').addEventListener('blur', async ()=>{
+  await loadUsers();
+  updateUserHint();
+});
+
+document.getElementById('openModal').addEventListener('click', async ()=>{
+  const hours = getDayHours(selectedDate);
+  if(hours.closed){
+    showToast('O carro não fica disponível aos domingos.');
+    return;
+  }
+  document.getElementById('errbox').style.display = 'none';
+  document.getElementById('fName').value = '';
+  document.getElementById('fSector').value = '';
+  document.getElementById('fSector').readOnly = false;
+  document.getElementById('fUserPin').value = '';
+  document.getElementById('userHint').textContent = '';
+  document.getElementById('userHint').className = 'userhint';
+  const fStart = document.getElementById('fStart');
+  const fEnd = document.getElementById('fEnd');
+  fStart.min = minToTime(hours.start);
+  fStart.max = minToTime(hours.end);
+  fEnd.min = minToTime(hours.start);
+  fEnd.max = minToTime(hours.end);
+  fStart.value = minToTime(hours.start);
+  fEnd.value = minToTime(Math.min(hours.start + 60, hours.end));
+  fType.value = 'visita';
+  fTypeDetail.value = '';
+  document.getElementById('fAddress').value = '';
+  document.getElementById('fClientName').value = '';
+  document.getElementById('fClientPhone').value = '';
+  updateTypeDetailField();
+  overlay.classList.add('open');
+  await loadUsers();
+});
+document.getElementById('cancelModal').addEventListener('click', ()=>{
+  overlay.classList.remove('open');
+});
+overlay.addEventListener('click', (e)=>{
+  if(e.target === overlay) overlay.classList.remove('open');
+});
+
+document.getElementById('saveBooking').addEventListener('click', async ()=>{
+  const errbox = document.getElementById('errbox');
+  errbox.style.display = 'none';
+  const name = document.getElementById('fName').value.trim();
+  const sector = document.getElementById('fSector').value.trim();
+  const userPin = document.getElementById('fUserPin').value.trim();
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  const type = fType.value;
+  const typeDetail = fTypeDetail.value.trim();
+  const address = document.getElementById('fAddress').value.trim();
+  const clientName = document.getElementById('fClientName').value.trim();
+  const clientPhone = document.getElementById('fClientPhone').value.trim();
+
+  function fail(msg){
+    errbox.textContent = msg;
+    errbox.style.display = 'block';
+  }
+
+  if(!name) return fail('Informe seu nome.');
+  if(!/^\d{4}$/.test(userPin)) return fail('O PIN pessoal deve ter 4 dígitos numéricos.');
+
+  await loadUsers();
+  const existingUser = findUser(name);
+  let isNewUser = false;
+  if(existingUser){
+    if(existingUser.pin !== userPin){
+      return fail('PIN incorreto para este nome. Se não é você, use outro nome de cadastro.');
+    }
+  }else{
+    if(!sector) return fail('Informe seu setor / ramal para se cadastrar.');
+    isNewUser = true;
+  }
+
+  if(!start || !end) return fail('Informe o horário de início e término.');
+  const sMin = timeToMin(start), eMin = timeToMin(end);
+  const dayHours = getDayHours(selectedDate);
+  if(dayHours.closed) return fail('O carro não fica disponível aos domingos.');
+  if(sMin < dayHours.start || eMin > dayHours.end){
+    return fail(`Horário deve estar entre ${minToTime(dayHours.start)} e ${minToTime(dayHours.end)}.`);
+  }
+  if(sMin >= eMin) return fail('O horário de término deve ser depois do início.');
+  if((type === 'visita' || type === 'outro') && !typeDetail){
+    return fail(type === 'visita' ? 'Informe a referência do imóvel.' : 'Descreva a finalidade do uso.');
+  }
+  if(!address) return fail('Informe o endereço de destino.');
+  const addressErr = validateAddress(address);
+  if(addressErr) return fail(addressErr);
+  if(!clientName) return fail('Informe o nome do cliente.');
+  if(!clientPhone) return fail('Informe o telefone do cliente.');
+  const phoneErr = validatePhone(clientPhone);
+  if(phoneErr) return fail(phoneErr);
+
+  const btn = document.getElementById('saveBooking');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try{
+    await loadBookings();
+    const dayBookings = allBookings[selectedDate] || [];
+    const activeDay = dayBookings.filter(b => b.status !== 'cancelado');
+    const overlap = activeDay.find(b => {
+      const [s,e] = effWindow(b);
+      return sMin < e && eMin > s;
+    });
+    if(overlap){
+      fail(`Conflito com a reserva de ${overlap.name} (${overlap.start}\u2013${overlap.end}).`);
+      btn.disabled = false;
+      btn.textContent = 'Confirmar';
+      return;
+    }
+    if(isNewUser){
+      await loadUsers();
+      users[userKey(name)] = { name, sector, pin: userPin, createdAt: new Date().toISOString() };
+      await saveUsers();
+    }
+    const finalSector = isNewUser ? sector : (existingUser.sector || sector);
+    const booking = {
+      id: 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name, sector: finalSector, start, end,
+      type, typeDetail, address, clientName, clientPhone,
+      status: 'ativo',
+      createdAt: new Date().toISOString()
+    };
+    allBookings[selectedDate] = [...dayBookings, booking];
+    await saveBookings();
+    overlay.classList.remove('open');
+    renderAll();
+    showToast('Reserva confirmada');
+  }catch(e){
+    fail('Não foi possível salvar. Tente novamente.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Confirmar';
+  }
+});
+
+const histOverlay = document.getElementById('histOverlay');
+const pinOverlay = document.getElementById('pinOverlay');
+
+async function openHistoryPanel(){
+  histOverlay.classList.add('open');
+  document.getElementById('histList').innerHTML = '<div class="loading">Carregando histórico…</div>';
+  await loadBookings();
+  await loadUsers();
+  renderHistory();
+  renderUsersList();
+}
+
+function renderUsersList(){
+  const el = document.getElementById('usersList');
+  const list = Object.values(users).sort((a,b)=>a.name.localeCompare(b.name));
+  if(list.length === 0){
+    el.innerHTML = `<p style="font-size:12.5px;color:var(--muted);">Nenhum usuário cadastrado ainda.</p>`;
+    return;
+  }
+  el.innerHTML = list.map(u => `
+    <div class="histcard">
+      <div class="histtop">
+        <div class="histbody"><b>${escapeHtml(u.name)}</b> \u00b7 ${escapeHtml(u.sector || '\u2014')}</div>
+        <button class="resetPinBtn" data-key="${escapeHtml(userKey(u.name))}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Redefinir PIN</button>
+      </div>
+      <div class="resetPinForm" data-key="${escapeHtml(userKey(u.name))}" style="display:none;margin-top:.5rem;">
+        <div class="recform">
+          <div class="rf">
+            <label>Novo PIN (4 dígitos)</label>
+            <input type="password" class="newPinInput" inputmode="numeric" placeholder="4 dígitos">
+          </div>
+          <button class="confirmResetPinBtn" data-key="${escapeHtml(userKey(u.name))}">Salvar</button>
+        </div>
+        <p class="resetPinErr" style="display:none;color:var(--busy);font-size:11.5px;margin:.4rem 0 0;"></p>
+      </div>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.resetPinBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const form = el.querySelector(`.resetPinForm[data-key="${btn.dataset.key}"]`);
+      const isOpen = form.style.display === 'block';
+      el.querySelectorAll('.resetPinForm').forEach(f => f.style.display = 'none');
+      form.style.display = isOpen ? 'none' : 'block';
+      if(!isOpen) form.querySelector('.newPinInput').value = '';
+    });
+  });
+  el.querySelectorAll('.confirmResetPinBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const key = btn.dataset.key;
+      const form = el.querySelector(`.resetPinForm[data-key="${key}"]`);
+      const input = form.querySelector('.newPinInput');
+      const err = form.querySelector('.resetPinErr');
+      const newPin = input.value.trim();
+      err.style.display = 'none';
+      if(!/^\d{4}$/.test(newPin)){
+        err.textContent = 'O PIN deve ter exatamente 4 dígitos numéricos.';
+        err.style.display = 'block';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Salvando…';
+      try{
+        await loadUsers();
+        if(users[key]){
+          users[key].pin = newPin;
+          users[key].pinResetAt = new Date().toISOString();
+          await saveUsers();
+          showToast('PIN redefinido com sucesso');
+          form.style.display = 'none';
+        }
+      }catch(e){
+        err.textContent = 'Não foi possível salvar. Tente novamente.';
+        err.style.display = 'block';
+      }finally{
+        btn.disabled = false;
+        btn.textContent = 'Salvar';
+      }
+    });
+  });
+}
+
+document.getElementById('openHistory').addEventListener('click', async ()=>{
+  if(isAdminUnlocked){
+    await openHistoryPanel();
+    return;
+  }
+  document.getElementById('pinErrbox').style.display = 'none';
+  document.getElementById('fPin').value = '';
+  pinOverlay.classList.add('open');
+  document.getElementById('fPin').focus();
+});
+
+document.getElementById('cancelPin').addEventListener('click', ()=>{
+  pinOverlay.classList.remove('open');
+});
+pinOverlay.addEventListener('click', (e)=>{
+  if(e.target === pinOverlay) pinOverlay.classList.remove('open');
+});
+async function trySubmitPin(){
+  const errbox = document.getElementById('pinErrbox');
+  const val = document.getElementById('fPin').value.trim();
+  if(val === ADMIN_PIN){
+    isAdminUnlocked = true;
+    pinOverlay.classList.remove('open');
+    errbox.style.display = 'none';
+    updateActionButtons();
+    await openHistoryPanel();
+  }else{
+    errbox.textContent = 'PIN incorreto.';
+    errbox.style.display = 'block';
+  }
+}
+document.getElementById('submitPin').addEventListener('click', trySubmitPin);
+document.getElementById('fPin').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') trySubmitPin();
+});
+
+const receptionPinOverlay = document.getElementById('receptionPinOverlay');
+document.getElementById('openReception').addEventListener('click', ()=>{
+  if(isReceptionUnlocked) return;
+  document.getElementById('receptionPinErrbox').style.display = 'none';
+  document.getElementById('fReceptionPin').value = '';
+  receptionPinOverlay.classList.add('open');
+  document.getElementById('fReceptionPin').focus();
+});
+document.getElementById('cancelReceptionPin').addEventListener('click', ()=>{
+  receptionPinOverlay.classList.remove('open');
+});
+receptionPinOverlay.addEventListener('click', (e)=>{
+  if(e.target === receptionPinOverlay) receptionPinOverlay.classList.remove('open');
+});
+function trySubmitReceptionPin(){
+  const errbox = document.getElementById('receptionPinErrbox');
+  const val = document.getElementById('fReceptionPin').value.trim();
+  if(val === RECEPTION_PIN){
+    isReceptionUnlocked = true;
+    receptionPinOverlay.classList.remove('open');
+    errbox.style.display = 'none';
+    document.getElementById('receptionBanner').style.display = 'flex';
+    renderAll();
+    showToast('Modo recepção ativado');
+  }else{
+    errbox.textContent = 'PIN incorreto.';
+    errbox.style.display = 'block';
+  }
+}
+document.getElementById('submitReceptionPin').addEventListener('click', trySubmitReceptionPin);
+document.getElementById('fReceptionPin').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') trySubmitReceptionPin();
+});
+document.getElementById('exitReception').addEventListener('click', ()=>{
+  isReceptionUnlocked = false;
+  document.getElementById('receptionBanner').style.display = 'none';
+  renderAll();
+});
+
+document.getElementById('closeHistory').addEventListener('click', ()=>{
+  histOverlay.classList.remove('open');
+});
+histOverlay.addEventListener('click', (e)=>{
+  if(e.target === histOverlay) histOverlay.classList.remove('open');
+});
+
+function renderHistory(){
+  const dates = Object.keys(allBookings).sort().reverse();
+  const rows = [];
+  dates.forEach(dateISO=>{
+    (allBookings[dateISO] || []).forEach(b=>{
+      rows.push({dateISO, ...b});
+    });
+  });
+  rows.sort((a,b)=>{
+    if(a.dateISO !== b.dateISO) return a.dateISO < b.dateISO ? 1 : -1;
+    return timeToMin(b.start) - timeToMin(a.start);
+  });
+  const el = document.getElementById('histList');
+  if(rows.length === 0){
+    el.innerHTML = `<div class="empty"><b>Sem registros ainda</b>Assim que houver reservas, elas ficarão arquivadas aqui.</div>`;
+    return;
+  }
+  el.innerHTML = rows.map(r => `
+    <div class="histcard">
+      <div class="histtop">
+        <span class="histdate">${fmtShort(r.dateISO)} \u00b7 programado ${r.start}\u2013${r.end}</span>
+        <span class="histstatus ${r.status}">${r.status === 'cancelado' ? 'Cancelado' : 'Ativo'}</span>
+      </div>
+      <div class="histbody">
+        <b>${escapeHtml(r.name)}</b>${r.sector ? ' \u00b7 ' + escapeHtml(r.sector) : ''} \u2014 ${TYPE_LABELS[r.type] || 'Outro'}${r.typeDetail ? ': ' + escapeHtml(r.typeDetail) : ''}<br>
+        Destino: ${escapeHtml(r.address || '\u2014')}<br>
+        Cliente: ${escapeHtml(r.clientName || '\u2014')}${r.clientPhone ? ' \u00b7 ' + escapeHtml(r.clientPhone) : ''}
+        ${(r.actualStart || r.actualEnd) ? `<br>Real: ${escapeHtml(r.actualStart || '\u2014')}\u2013${escapeHtml(r.actualEnd || '\u2014')}` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
