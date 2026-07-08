@@ -82,22 +82,36 @@
     color:#B9B7AE;
     margin:.4rem 0 0;
   }
-  .headbtns{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;}
-  .histBtn-primary{background:var(--amber);border-color:var(--amber);color:#26170A;font-weight:600;}
-  .histBtn-primary:hover{background:#C67E17;}
-  .histBtn{
+  .navmenu{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;}
+  .navlink{
     background:transparent;
-    border:1px solid #454A52;
-    color:#F1EFE8;
-    padding:.5rem .75rem;
-    border-radius:7px;
+    border:none;
+    color:#B9B7AE;
+    padding:.3rem 0;
     font-family:'JetBrains Mono',monospace;
-    font-size:11.5px;
-    letter-spacing:.03em;
+    font-size:12px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
     cursor:pointer;
+    border-bottom:2px solid transparent;
     white-space:nowrap;
   }
-  .histBtn:hover{background:#3A3F47;}
+  .navlink:hover{color:#F1EFE8;border-bottom-color:var(--amber);}
+  .cadastrorow{display:flex;justify-content:flex-end;margin-top:1.1rem;}
+  .cadastroBtn{
+    background:#ED1846;
+    color:#FFFFFF;
+    border:none;
+    padding:.7rem 1.5rem;
+    border-radius:8px;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .cadastroBtn:hover{background:#C81238;}
 
   .datebar{
     display:flex;
@@ -550,12 +564,14 @@
         <h1>Agenda do carro</h1>
         <p class="sub">Veículo da unidade &middot; visível para toda a equipe</p>
       </div>
-      <div class="headbtns">
-        <button class="histBtn histBtn-primary" id="openDriverForm">Cadastro</button>
-        <button class="histBtn" id="openReception">Recepção</button>
-        <button class="histBtn" id="openRH">RH</button>
-        <button class="histBtn" id="openHistory">Admin</button>
-      </div>
+      <nav class="navmenu">
+        <button class="navlink" id="openReception">Recepção</button>
+        <button class="navlink" id="openRH">RH</button>
+        <button class="navlink" id="openHistory">Admin</button>
+      </nav>
+    </div>
+    <div class="cadastrorow">
+      <button class="cadastroBtn" id="openDriverForm">Cadastro</button>
     </div>
   </header>
 
