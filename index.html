@@ -83,6 +83,8 @@
     margin:.4rem 0 0;
   }
   .headbtns{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;}
+  .histBtn-primary{background:var(--amber);border-color:var(--amber);color:#26170A;font-weight:600;}
+  .histBtn-primary:hover{background:#C67E17;}
   .histBtn{
     background:transparent;
     border:1px solid #454A52;
@@ -380,6 +382,28 @@
     overflow-y:auto;
   }
   @media (min-width:640px){.modal{border-radius:14px;}}
+  .modal-admin{max-width:560px;}
+  .admintabs{
+    display:flex;
+    gap:.4rem;
+    border-bottom:1px solid var(--line);
+    margin-bottom:1rem;
+  }
+  .admintab{
+    background:transparent;
+    border:none;
+    padding:.6rem .3rem;
+    font-family:'Oswald',sans-serif;
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--muted);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .admintab.active{color:var(--ink);border-bottom-color:var(--amber);}
+  .paneNote{font-size:12px;color:var(--muted);margin:0 0 .9rem;line-height:1.5;}
   .modal h3{
     font-family:'Oswald',sans-serif;
     text-transform:uppercase;
@@ -409,6 +433,26 @@
   .row2{display:flex;gap:.7rem;}
   .row2 .field{flex:1;}
   textarea{resize:vertical;min-height:56px;font-family:'Inter',sans-serif;}
+  .checkline{
+    display:flex;
+    gap:.6rem;
+    align-items:flex-start;
+    margin-bottom:.8rem;
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .checkline input[type=checkbox]{
+    margin-top:.2rem;
+    width:16px;
+    height:16px;
+    flex-shrink:0;
+    accent-color:var(--amber);
+    cursor:pointer;
+  }
+  .modal-admin .sectiontitle{margin-top:1.2rem;}
+  .modal-admin .sectiontitle:first-of-type{margin-top:0;}
   .userhint{
     font-size:11.5px;
     color:var(--muted);
@@ -417,6 +461,8 @@
   .userhint.newuser{color:var(--amber-dark);}
   .userhint.knownuser{color:#1F6B41;}
   .field input[readonly]{background:#EDEBE3;color:var(--muted);}
+  .uc-input{text-transform:uppercase;}
+  .uc-input::placeholder{text-transform:none;}
   .sectiontitle{
     font-family:'JetBrains Mono',monospace;
     font-size:10.5px;
@@ -504,8 +550,9 @@
         <p class="sub">Veículo da unidade &middot; visível para toda a equipe</p>
       </div>
       <div class="headbtns">
+        <button class="histBtn histBtn-primary" id="openDriverForm">Cadastro</button>
         <button class="histBtn" id="openReception">Recepção</button>
-        <button class="histBtn" id="openHistory">Histórico</button>
+        <button class="histBtn" id="openHistory">Admin</button>
       </div>
     </div>
   </header>
@@ -557,13 +604,13 @@
     <div class="sectiontitle">Quem reserva</div>
     <div class="field">
       <label for="fName">Seu nome</label>
-      <input type="text" id="fName" placeholder="Nome completo" autocomplete="off">
+      <input type="text" id="fName" class="uc-input" placeholder="Nome completo" autocomplete="off">
     </div>
     <p class="userhint" id="userHint"></p>
     <div class="row2">
       <div class="field">
         <label for="fSector">Setor / ramal</label>
-        <input type="text" id="fSector" placeholder="Ex: Comercial, ramal 234">
+        <input type="text" id="fSector" class="uc-input" placeholder="Ex: Comercial, ramal 234">
       </div>
       <div class="field">
         <label for="fUserPin">PIN pessoal</label>
@@ -595,16 +642,16 @@
     </div>
     <div class="field" id="fTypeDetailWrap">
       <label id="fTypeDetailLabel" for="fTypeDetail">Referência do imóvel</label>
-      <input type="text" id="fTypeDetail" placeholder="Código ou referência do imóvel">
+      <input type="text" id="fTypeDetail" class="uc-input" placeholder="Código ou referência do imóvel">
     </div>
     <div class="field">
       <label for="fAddress">Endereço de destino</label>
-      <input type="text" id="fAddress" placeholder="Rua, número, bairro">
+      <input type="text" id="fAddress" class="uc-input" placeholder="Rua, número, bairro">
     </div>
     <div class="row2">
       <div class="field">
         <label for="fClientName">Nome do cliente</label>
-        <input type="text" id="fClientName" placeholder="Nome do cliente">
+        <input type="text" id="fClientName" class="uc-input" placeholder="Nome do cliente">
       </div>
       <div class="field">
         <label for="fClientPhone">Telefone do cliente</label>
@@ -615,6 +662,79 @@
     <div class="modalbtns">
       <button class="btn-cancel" id="cancelModal">Cancelar</button>
       <button class="btn-save" id="saveBooking">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="driverOverlay">
+  <div class="modal modal-admin">
+    <h3>Cadastro de motorista</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 1rem;line-height:1.5;">Cadastro único, feito uma vez. Depois disso, use apenas seu nome e PIN para agendar o carro.</p>
+    <div class="errbox" id="driverErrbox"></div>
+
+    <div class="sectiontitle">Dados pessoais</div>
+    <div class="field">
+      <label for="dName">Nome completo</label>
+      <input type="text" id="dName" class="uc-input" placeholder="Nome completo" autocomplete="off">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="dCpf">CPF</label>
+        <input type="text" id="dCpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14">
+      </div>
+      <div class="field">
+        <label for="dSector">Setor / ramal</label>
+        <input type="text" id="dSector" class="uc-input" placeholder="Ex: Comercial, ramal 234">
+      </div>
+    </div>
+
+    <div class="sectiontitle">Habilitação (CNH)</div>
+    <div class="field">
+      <label for="dCnh">Número da CNH</label>
+      <input type="text" id="dCnh" inputmode="numeric" placeholder="Somente números" maxlength="11">
+    </div>
+    <div class="field">
+      <label for="dCnhPhoto">Foto da CNH (frente)</label>
+      <input type="file" id="dCnhPhoto" accept="image/*">
+      <div id="dCnhPreviewWrap" style="display:none;margin-top:.6rem;">
+        <img id="dCnhPreview" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--line);display:block;">
+      </div>
+    </div>
+
+    <div class="sectiontitle">Crie seu PIN de acesso</div>
+    <div class="row2">
+      <div class="field">
+        <label for="dPin">PIN (4 dígitos)</label>
+        <input type="password" id="dPin" inputmode="numeric" placeholder="4 dígitos" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="dPinConfirm">Confirmar PIN</label>
+        <input type="password" id="dPinConfirm" inputmode="numeric" placeholder="4 dígitos" autocomplete="off">
+      </div>
+    </div>
+    <p class="userhint newuser">Guarde esse PIN — ele será pedido sempre que você agendar ou cancelar o uso do carro.</p>
+
+    <div class="sectiontitle">Termo de responsabilidade</div>
+    <label class="checkline">
+      <input type="checkbox" id="dTerm1">
+      <span>Declaro que minha Carteira Nacional de Habilitação (CNH) está válida e em dia.</span>
+    </label>
+    <label class="checkline">
+      <input type="checkbox" id="dTerm2">
+      <span>Comprometo-me a não permitir que qualquer outra pessoa conduza o veículo, esteja ela habilitada ou não. Estou ciente de que, caso eu permita, assumirei total responsabilidade por qualquer acidente que venha a ocorrer.</span>
+    </label>
+    <label class="checkline">
+      <input type="checkbox" id="dTerm3">
+      <span>Declaro estar ciente e de acordo que eventuais multas decorrentes de condução indevida durante o uso do veículo serão de minha responsabilidade e repassadas a mim como condutor.</span>
+    </label>
+    <label class="checkline">
+      <input type="checkbox" id="dTerm4">
+      <span>Autorizo o uso dos meus dados pessoais (nome, CPF, CNH e foto do documento) exclusivamente para fins de controle interno de uso do veículo da empresa, conforme a LGPD (Lei Geral de Proteção de Dados).</span>
+    </label>
+
+    <div class="modalbtns">
+      <button class="btn-cancel" id="cancelDriverForm">Cancelar</button>
+      <button class="btn-save" id="saveDriverForm">Concluir cadastro</button>
     </div>
   </div>
 </div>
@@ -636,7 +756,7 @@
     </div>
     <div class="field">
       <label for="fBlockReason">Motivo do bloqueio</label>
-      <input type="text" id="fBlockReason" placeholder="Ex: Revisão / manutenção preventiva">
+      <input type="text" id="fBlockReason" class="uc-input" placeholder="Ex: Revisão / manutenção preventiva">
     </div>
     <div class="modalbtns">
       <button class="btn-cancel" id="cancelBlock">Cancelar</button>
@@ -652,7 +772,7 @@
     <div class="errbox" id="confirmErrbox"></div>
     <div class="field" id="confirmNameWrap">
       <label id="confirmNameLabel" for="fConfirmName">PIN pessoal</label>
-      <input type="password" id="fConfirmName" inputmode="numeric" placeholder="4 dígitos" autocomplete="off">
+      <input type="password" id="fConfirmName" class="uc-input" inputmode="numeric" placeholder="4 dígitos" autocomplete="off">
     </div>
     <div class="modalbtns">
       <button class="btn-cancel" id="confirmNo">Voltar</button>
@@ -680,7 +800,7 @@
 <div class="overlay" id="pinOverlay">
   <div class="modal">
     <h3>Acesso restrito</h3>
-    <p style="font-size:13px;color:var(--muted);margin:0 0 1rem;">O histórico é visível apenas para o perfil admin. Informe o PIN de acesso.</p>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 1rem;">O painel administrativo (histórico e usuários cadastrados) é visível apenas para o perfil admin. Informe o PIN de acesso.</p>
     <div class="errbox" id="pinErrbox"></div>
     <div class="field">
       <label for="fPin">PIN de admin</label>
@@ -694,11 +814,23 @@
 </div>
 
 <div class="overlay" id="histOverlay">
-  <div class="modal">
-    <h3>Histórico de reservas <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;">(somente leitura)</span></h3>
-    <div id="histList"><div class="loading">Carregando histórico…</div></div>
-    <div class="sectiontitle" style="margin-top:1.4rem;">Usuários cadastrados</div>
-    <div id="usersList"></div>
+  <div class="modal modal-admin">
+    <h3>Painel administrativo</h3>
+    <div class="admintabs">
+      <button class="admintab active" id="tabHistorico" data-tab="historico">Histórico</button>
+      <button class="admintab" id="tabUsuarios" data-tab="usuarios">Usuários</button>
+    </div>
+
+    <div class="admintabpane" id="paneHistorico">
+      <p class="paneNote">Registro completo de reservas e bloqueios \u2014 somente leitura.</p>
+      <div id="histList"><div class="loading">Carregando histórico…</div></div>
+    </div>
+
+    <div class="admintabpane" id="paneUsuarios" style="display:none;">
+      <p class="paneNote">Nome, setor e PIN de cada pessoa cadastrada. Use "Redefinir PIN" se alguém esquecer o próprio PIN.</p>
+      <div id="usersList"></div>
+    </div>
+
     <div class="modalbtns">
       <button class="btn-cancel" id="closeHistory">Fechar</button>
     </div>
@@ -709,6 +841,22 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+(function(){
+  const ua = navigator.userAgent || '';
+  const isPhone = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Mobi/i.test(ua);
+  if(isPhone){
+    document.documentElement.innerHTML = `
+      <body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#21242A;color:#F1EFE8;font-family:Arial,sans-serif;text-align:center;padding:2rem;">
+        <div style="max-width:340px;">
+          <div style="font-size:40px;margin-bottom:1rem;">🖥️</div>
+          <h2 style="font-family:Arial,sans-serif;font-size:18px;margin:0 0 .8rem;">Acesso disponível apenas por computador</h2>
+          <p style="font-size:14px;line-height:1.6;color:#B9B7AE;margin:0;">A agenda do carro não pode ser acessada pelo celular. Abra este link em um computador para agendar, cancelar ou consultar a disponibilidade do veículo.</p>
+        </div>
+      </body>`;
+    throw new Error('Acesso bloqueado: dispositivo móvel.');
+  }
+})();
+
 const STORAGE_KEY = 'bookings-by-date';
 const HOURS_WEEKDAY = {start: 8*60, end: 18*60};
 const HOURS_SATURDAY = {start: 9*60, end: 12*60};
@@ -818,12 +966,30 @@ try{
   supabaseReady = false;
 }
 
-function showConfigWarning(){
+function showConfigWarning(msg){
   const wrap = document.querySelector('.wrap');
   const warn = document.createElement('div');
+  warn.className = 'supabase-warn';
   warn.style.cssText = 'background:#FBE7E2;color:#8A2A1A;padding:1rem 1.25rem;margin:1rem 1.5rem;border-radius:8px;font-size:13.5px;line-height:1.6;font-family:Inter,sans-serif;';
-  warn.innerHTML = '<b>Supabase não configurado.</b> Edite as constantes SUPABASE_URL e SUPABASE_ANON_KEY no início do código-fonte com os dados do seu projeto Supabase para a agenda funcionar.';
+  warn.innerHTML = msg || '<b>Supabase não configurado.</b> Edite as constantes SUPABASE_URL e SUPABASE_ANON_KEY no início do código-fonte com os dados do seu projeto Supabase para a agenda funcionar.';
   wrap.insertBefore(warn, wrap.firstChild.nextSibling);
+}
+
+function describeError(err){
+  if(!err) return 'erro desconhecido';
+  try{
+    const parts = [];
+    if(err.message) parts.push('message: ' + err.message);
+    if(err.details) parts.push('details: ' + err.details);
+    if(err.hint) parts.push('hint: ' + err.hint);
+    if(err.code) parts.push('code: ' + err.code);
+    if(parts.length) return parts.join(' | ');
+    const json = JSON.stringify(err);
+    if(json && json !== '{}') return json;
+    return String(err);
+  }catch(_){
+    return String(err);
+  }
 }
 
 async function getStoredValue(key, fallback){
@@ -834,9 +1000,21 @@ async function getStoredValue(key, fallback){
       .select('value')
       .eq('key', key)
       .maybeSingle();
-    if(error || !data) return fallback;
+    if(error){
+      const desc = describeError(error);
+      console.error('[Supabase] Erro ao LER "'+key+'": ' + desc);
+      showConfigWarning('<b>Erro ao ler dados do Supabase</b> (chave: '+key+'). Detalhe: '+escapeHtmlSafe(desc)+'.');
+      return fallback;
+    }
+    if(!data){
+      console.warn('[Supabase] Nenhuma linha encontrada para a chave "'+key+'". Verifique se o INSERT inicial foi executado no SQL Editor.');
+      return fallback;
+    }
     return data.value || fallback;
   }catch(e){
+    const desc = describeError(e);
+    console.error('[Supabase] Exceção ao LER "'+key+'": ' + desc);
+    showConfigWarning('<b>Erro ao conectar no Supabase.</b> Detalhe: '+escapeHtmlSafe(desc)+'.');
     return fallback;
   }
 }
@@ -846,10 +1024,24 @@ async function setStoredValue(key, value){
     const { error } = await supabaseClient
       .from('app_storage')
       .upsert({ key, value, updated_at: new Date().toISOString() });
-    return !error;
+    if(error){
+      const desc = describeError(error);
+      console.error('[Supabase] Erro ao SALVAR "'+key+'": ' + desc);
+      showToast('Erro ao salvar: ' + desc);
+      return false;
+    }
+    return true;
   }catch(e){
+    const desc = describeError(e);
+    console.error('[Supabase] Exceção ao SALVAR "'+key+'": ' + desc);
+    showToast('Erro ao salvar: ' + desc);
     return false;
   }
+}
+function escapeHtmlSafe(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
 }
 
 async function loadBookings(){
@@ -859,18 +1051,94 @@ async function saveBookings(){
   await setStoredValue(STORAGE_KEY, allBookings);
 }
 
-const USERS_KEY = 'registered-users';
 let users = {};
 
 function userKey(name){
-  return name.trim().toLowerCase();
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ');
 }
+
 async function loadUsers(){
-  users = await getStoredValue(USERS_KEY, {});
+  if(!supabaseReady){ users = {}; return; }
+  try{
+    const { data, error } = await supabaseClient
+      .from('drivers')
+      .select('key,name,sector,pin,cpf,cnh,accepted_at');
+    if(error){
+      console.error('[Supabase] Erro ao LER motoristas: ' + describeError(error));
+      showConfigWarning('<b>Erro ao ler cadastro de motoristas.</b> Detalhe: '+escapeHtmlSafe(describeError(error))+'.');
+      users = {};
+      return;
+    }
+    users = {};
+    (data || []).forEach(row => {
+      users[row.key] = {
+        name: row.name, sector: row.sector, pin: row.pin,
+        cpf: row.cpf, cnh: row.cnh, acceptedAt: row.accepted_at
+      };
+    });
+  }catch(e){
+    console.error('[Supabase] Exceção ao LER motoristas: ' + describeError(e));
+    users = {};
+  }
 }
-async function saveUsers(){
-  await setStoredValue(USERS_KEY, users);
+
+async function registerDriver(record){
+  if(!supabaseReady) return { ok:false, error:'Supabase não configurado.' };
+  try{
+    const { error } = await supabaseClient
+      .from('drivers')
+      .insert({
+        key: userKey(record.name),
+        name: record.name,
+        sector: record.sector,
+        cpf: record.cpf,
+        cnh: record.cnh,
+        cnh_photo: record.cnhPhoto,
+        pin: record.pin,
+        accepted_at: record.acceptedAt,
+        terms_version: record.termsVersion
+      });
+    if(error) return { ok:false, error: describeError(error) };
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: describeError(e) };
+  }
 }
+
+async function updateDriverPin(key, newPin){
+  if(!supabaseReady) return { ok:false, error:'Supabase não configurado.' };
+  try{
+    const { error } = await supabaseClient
+      .from('drivers')
+      .update({ pin: newPin })
+      .eq('key', key);
+    if(error) return { ok:false, error: describeError(error) };
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: describeError(e) };
+  }
+}
+
+async function fetchDriverPhoto(key){
+  if(!supabaseReady) return null;
+  try{
+    const { data, error } = await supabaseClient
+      .from('drivers')
+      .select('cnh_photo')
+      .eq('key', key)
+      .maybeSingle();
+    if(error || !data) return null;
+    return data.cnh_photo || null;
+  }catch(e){
+    return null;
+  }
+}
+
 function findUser(name){
   return users[userKey(name)] || null;
 }
@@ -1220,7 +1488,7 @@ document.getElementById('confirmYes').addEventListener('click', async ()=>{
         return;
       }
     }else{
-      if(typed.toLowerCase() !== (pendingCancelName || '').trim().toLowerCase()){
+      if(userKey(typed) !== userKey(pendingCancelName || '')){
         errbox.textContent = 'Nome não confere com o responsável pela reserva.';
         errbox.style.display = 'block';
         return;
@@ -1243,6 +1511,145 @@ document.getElementById('confirmYes').addEventListener('click', async ()=>{
   resetPendingCancel();
   if(dateISO === selectedDate) renderAll();
   showToast(wasBlock ? 'Bloqueio removido' : 'Reserva cancelada e arquivada no histórico');
+});
+
+function isValidCpf(cpf){
+  cpf = cpf.replace(/\D/g, '');
+  if(cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let sum = 0;
+  for(let i=0;i<9;i++) sum += parseInt(cpf[i]) * (10 - i);
+  let rev = 11 - (sum % 11);
+  if(rev >= 10) rev = 0;
+  if(rev !== parseInt(cpf[9])) return false;
+  sum = 0;
+  for(let i=0;i<10;i++) sum += parseInt(cpf[i]) * (11 - i);
+  rev = 11 - (sum % 11);
+  if(rev >= 10) rev = 0;
+  if(rev !== parseInt(cpf[10])) return false;
+  return true;
+}
+function maskCpf(v){
+  v = v.replace(/\D/g, '').slice(0,11);
+  if(v.length > 9) return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+  if(v.length > 6) return v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+  if(v.length > 3) return v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+  return v;
+}
+document.getElementById('dCpf').addEventListener('input', (e)=>{
+  e.target.value = maskCpf(e.target.value);
+});
+document.getElementById('dCnh').addEventListener('input', (e)=>{
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0,11);
+});
+
+let driverPhotoDataUrl = null;
+document.getElementById('dCnhPhoto').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  const wrap = document.getElementById('dCnhPreviewWrap');
+  const img = document.getElementById('dCnhPreview');
+  if(!file){ driverPhotoDataUrl = null; wrap.style.display = 'none'; return; }
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const tempImg = new Image();
+    tempImg.onload = ()=>{
+      const maxW = 1000;
+      const scale = Math.min(1, maxW / tempImg.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = tempImg.width * scale;
+      canvas.height = tempImg.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+      driverPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      img.src = driverPhotoDataUrl;
+      wrap.style.display = 'block';
+    };
+    tempImg.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+const driverOverlay = document.getElementById('driverOverlay');
+function resetDriverForm(){
+  document.getElementById('driverErrbox').style.display = 'none';
+  document.getElementById('dName').value = '';
+  document.getElementById('dCpf').value = '';
+  document.getElementById('dSector').value = '';
+  document.getElementById('dCnh').value = '';
+  document.getElementById('dCnhPhoto').value = '';
+  document.getElementById('dCnhPreviewWrap').style.display = 'none';
+  document.getElementById('dPin').value = '';
+  document.getElementById('dPinConfirm').value = '';
+  document.getElementById('dTerm1').checked = false;
+  document.getElementById('dTerm2').checked = false;
+  document.getElementById('dTerm3').checked = false;
+  document.getElementById('dTerm4').checked = false;
+  driverPhotoDataUrl = null;
+}
+document.getElementById('openDriverForm').addEventListener('click', ()=>{
+  resetDriverForm();
+  driverOverlay.classList.add('open');
+});
+document.getElementById('cancelDriverForm').addEventListener('click', ()=>{
+  driverOverlay.classList.remove('open');
+});
+driverOverlay.addEventListener('click', (e)=>{
+  if(e.target === driverOverlay) driverOverlay.classList.remove('open');
+});
+
+document.getElementById('saveDriverForm').addEventListener('click', async ()=>{
+  const errbox = document.getElementById('driverErrbox');
+  errbox.style.display = 'none';
+  function fail(msg){
+    errbox.textContent = msg;
+    errbox.style.display = 'block';
+  }
+  const name = document.getElementById('dName').value.trim().toUpperCase();
+  const cpf = document.getElementById('dCpf').value.trim();
+  const sector = document.getElementById('dSector').value.trim().toUpperCase();
+  const cnh = document.getElementById('dCnh').value.trim();
+  const pin = document.getElementById('dPin').value.trim();
+  const pinConfirm = document.getElementById('dPinConfirm').value.trim();
+
+  if(!name) return fail('Informe o nome completo.');
+  if(!isValidCpf(cpf)) return fail('CPF inválido. Confira os números digitados.');
+  if(!sector) return fail('Informe o setor / ramal.');
+  if(!/^\d{11}$/.test(cnh)) return fail('Número da CNH deve ter 11 dígitos numéricos.');
+  if(!driverPhotoDataUrl) return fail('Anexe uma foto da CNH.');
+  if(!/^\d{4}$/.test(pin)) return fail('O PIN deve ter 4 dígitos numéricos.');
+  if(pin !== pinConfirm) return fail('A confirmação do PIN não confere.');
+  if(!document.getElementById('dTerm1').checked || !document.getElementById('dTerm2').checked ||
+     !document.getElementById('dTerm3').checked || !document.getElementById('dTerm4').checked){
+    return fail('É necessário concordar com todas as declarações para concluir o cadastro.');
+  }
+
+  await loadUsers();
+  if(findUser(name)){
+    return fail('Este nome já está cadastrado. Se esqueceu o PIN, peça para o admin redefinir (botão "Admin").');
+  }
+
+  const btn = document.getElementById('saveDriverForm');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+  try{
+    const result = await registerDriver({
+      name, cpf, sector, cnh,
+      cnhPhoto: driverPhotoDataUrl,
+      pin,
+      acceptedAt: new Date().toISOString(),
+      termsVersion: 'v1-2026-07'
+    });
+    if(!result.ok){
+      fail('Não foi possível concluir o cadastro: ' + result.error);
+      return;
+    }
+    driverOverlay.classList.remove('open');
+    showToast('Cadastro concluído! Agora você já pode agendar o carro.');
+  }catch(e){
+    fail('Não foi possível concluir o cadastro. Tente novamente.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Concluir cadastro';
+  }
 });
 
 const blockOverlay = document.getElementById('blockOverlay');
@@ -1281,7 +1688,7 @@ document.getElementById('saveBlock').addEventListener('click', async ()=>{
   if(!canManage()) return failBlock('Apenas admin ou recepção podem bloquear horários.');
   const start = document.getElementById('fBlockStart').value;
   const end = document.getElementById('fBlockEnd').value;
-  const reason = document.getElementById('fBlockReason').value.trim();
+  const reason = document.getElementById('fBlockReason').value.trim().toUpperCase();
   if(!start || !end) return failBlock('Informe o horário de início e término.');
   const sMin = timeToMin(start), eMin = timeToMin(end);
   const hours = getDayHours(selectedDate);
@@ -1348,23 +1755,22 @@ function updateUserHint(){
   const nameVal = document.getElementById('fName').value.trim();
   const hint = document.getElementById('userHint');
   const sectorInput = document.getElementById('fSector');
+  sectorInput.readOnly = true;
   if(!nameVal){
     hint.textContent = '';
     hint.className = 'userhint';
-    sectorInput.readOnly = false;
     sectorInput.value = '';
     return;
   }
   const u = findUser(nameVal);
   if(u){
-    hint.textContent = `Usuário cadastrado \u00b7 informe seu PIN para confirmar.`;
+    hint.textContent = `Motorista cadastrado \u00b7 informe seu PIN para confirmar.`;
     hint.className = 'userhint knownuser';
     sectorInput.value = u.sector || '';
-    sectorInput.readOnly = true;
   }else{
-    hint.innerHTML = `Nome novo \u00b7 preencha o setor e crie um PIN de 4 dígitos. <b>Guarde esse PIN</b> \u2014 ele será pedido sempre que você agendar ou cancelar o uso do carro.`;
+    hint.innerHTML = `Motorista não encontrado. Use o botão <b>"Cadastro"</b> no topo da página antes de agendar.`;
     hint.className = 'userhint newuser';
-    sectorInput.readOnly = false;
+    sectorInput.value = '';
   }
 }
 document.getElementById('fName').addEventListener('input', updateUserHint);
@@ -1382,7 +1788,7 @@ document.getElementById('openModal').addEventListener('click', async ()=>{
   document.getElementById('errbox').style.display = 'none';
   document.getElementById('fName').value = '';
   document.getElementById('fSector').value = '';
-  document.getElementById('fSector').readOnly = false;
+  document.getElementById('fSector').readOnly = true;
   document.getElementById('fUserPin').value = '';
   document.getElementById('userHint').textContent = '';
   document.getElementById('userHint').className = 'userhint';
@@ -1413,15 +1819,15 @@ overlay.addEventListener('click', (e)=>{
 document.getElementById('saveBooking').addEventListener('click', async ()=>{
   const errbox = document.getElementById('errbox');
   errbox.style.display = 'none';
-  const name = document.getElementById('fName').value.trim();
-  const sector = document.getElementById('fSector').value.trim();
+  const name = document.getElementById('fName').value.trim().toUpperCase();
+  const sector = document.getElementById('fSector').value.trim().toUpperCase();
   const userPin = document.getElementById('fUserPin').value.trim();
   const start = document.getElementById('fStart').value;
   const end = document.getElementById('fEnd').value;
   const type = fType.value;
-  const typeDetail = fTypeDetail.value.trim();
-  const address = document.getElementById('fAddress').value.trim();
-  const clientName = document.getElementById('fClientName').value.trim();
+  const typeDetail = fTypeDetail.value.trim().toUpperCase();
+  const address = document.getElementById('fAddress').value.trim().toUpperCase();
+  const clientName = document.getElementById('fClientName').value.trim().toUpperCase();
   const clientPhone = document.getElementById('fClientPhone').value.trim();
 
   function fail(msg){
@@ -1434,14 +1840,11 @@ document.getElementById('saveBooking').addEventListener('click', async ()=>{
 
   await loadUsers();
   const existingUser = findUser(name);
-  let isNewUser = false;
-  if(existingUser){
-    if(existingUser.pin !== userPin){
-      return fail('PIN incorreto para este nome. Se não é você, use outro nome de cadastro.');
-    }
-  }else{
-    if(!sector) return fail('Informe seu setor / ramal para se cadastrar.');
-    isNewUser = true;
+  if(!existingUser){
+    return fail('Motorista não cadastrado. Use o botão "Cadastro" no topo da página antes de agendar.');
+  }
+  if(existingUser.pin !== userPin){
+    return fail('PIN incorreto para este nome.');
   }
 
   if(!start || !end) return fail('Informe o horário de início e término.');
@@ -1481,15 +1884,9 @@ document.getElementById('saveBooking').addEventListener('click', async ()=>{
       btn.textContent = 'Confirmar';
       return;
     }
-    if(isNewUser){
-      await loadUsers();
-      users[userKey(name)] = { name, sector, pin: userPin, createdAt: new Date().toISOString() };
-      await saveUsers();
-    }
-    const finalSector = isNewUser ? sector : (existingUser.sector || sector);
     const booking = {
       id: 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-      name, sector: finalSector, start, end,
+      name, sector: existingUser.sector || sector, start, end,
       type, typeDetail, address, clientName, clientPhone,
       status: 'ativo',
       createdAt: new Date().toISOString()
@@ -1510,8 +1907,19 @@ document.getElementById('saveBooking').addEventListener('click', async ()=>{
 const histOverlay = document.getElementById('histOverlay');
 const pinOverlay = document.getElementById('pinOverlay');
 
+function switchAdminTab(tab){
+  const isHist = tab === 'historico';
+  document.getElementById('tabHistorico').classList.toggle('active', isHist);
+  document.getElementById('tabUsuarios').classList.toggle('active', !isHist);
+  document.getElementById('paneHistorico').style.display = isHist ? 'block' : 'none';
+  document.getElementById('paneUsuarios').style.display = isHist ? 'none' : 'block';
+}
+document.getElementById('tabHistorico').addEventListener('click', ()=>switchAdminTab('historico'));
+document.getElementById('tabUsuarios').addEventListener('click', ()=>switchAdminTab('usuarios'));
+
 async function openHistoryPanel(){
   histOverlay.classList.add('open');
+  switchAdminTab('historico');
   document.getElementById('histList').innerHTML = '<div class="loading">Carregando histórico…</div>';
   await loadBookings();
   await loadUsers();
@@ -1529,9 +1937,13 @@ function renderUsersList(){
   el.innerHTML = list.map(u => `
     <div class="histcard">
       <div class="histtop">
-        <div class="histbody"><b>${escapeHtml(u.name)}</b> \u00b7 ${escapeHtml(u.sector || '\u2014')}</div>
-        <button class="resetPinBtn" data-key="${escapeHtml(userKey(u.name))}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Redefinir PIN</button>
+        <div class="histbody"><b>${escapeHtml(u.name)}</b> \u00b7 ${escapeHtml(u.sector || '\u2014')}<br>CPF: ${escapeHtml(u.cpf || '\u2014')} \u00b7 CNH: ${escapeHtml(u.cnh || '\u2014')}</div>
+        <div style="display:flex;flex-direction:column;gap:.35rem;">
+          <button class="viewCnhBtn" data-key="${escapeHtml(userKey(u.name))}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Ver CNH</button>
+          <button class="resetPinBtn" data-key="${escapeHtml(userKey(u.name))}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Redefinir PIN</button>
+        </div>
       </div>
+      <div class="cnhPreviewWrap" data-key="${escapeHtml(userKey(u.name))}" style="display:none;margin-top:.5rem;"></div>
       <div class="resetPinForm" data-key="${escapeHtml(userKey(u.name))}" style="display:none;margin-top:.5rem;">
         <div class="recform">
           <div class="rf">
@@ -1545,6 +1957,21 @@ function renderUsersList(){
     </div>
   `).join('');
 
+  el.querySelectorAll('.viewCnhBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const key = btn.dataset.key;
+      const wrap = el.querySelector(`.cnhPreviewWrap[data-key="${key}"]`);
+      const isOpen = wrap.style.display === 'block';
+      el.querySelectorAll('.cnhPreviewWrap').forEach(w => w.style.display = 'none');
+      if(isOpen){ wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      wrap.innerHTML = '<p style="font-size:11.5px;color:var(--muted);">Carregando foto…</p>';
+      const photo = await fetchDriverPhoto(key);
+      wrap.innerHTML = photo
+        ? `<img src="${photo}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--line);display:block;">`
+        : '<p style="font-size:11.5px;color:var(--muted);">Nenhuma foto de CNH cadastrada.</p>';
+    });
+  });
   el.querySelectorAll('.resetPinBtn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const form = el.querySelector(`.resetPinForm[data-key="${btn.dataset.key}"]`);
@@ -1570,13 +1997,13 @@ function renderUsersList(){
       btn.disabled = true;
       btn.textContent = 'Salvando…';
       try{
-        await loadUsers();
-        if(users[key]){
-          users[key].pin = newPin;
-          users[key].pinResetAt = new Date().toISOString();
-          await saveUsers();
+        const result = await updateDriverPin(key, newPin);
+        if(result.ok){
           showToast('PIN redefinido com sucesso');
           form.style.display = 'none';
+        }else{
+          err.textContent = 'Não foi possível salvar: ' + result.error;
+          err.style.display = 'block';
         }
       }catch(e){
         err.textContent = 'Não foi possível salvar. Tente novamente.';
