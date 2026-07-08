@@ -515,6 +515,7 @@
   }
   .histstatus.ativo{background:var(--free-bg);color:#1F6B41;}
   .histstatus.cancelado{background:var(--busy-bg);color:var(--busy);}
+  .histstatus.pendente{background:#FCEFD9;color:var(--amber-dark);}
   .histbody{font-size:12.5px;color:var(--muted);line-height:1.5;}
   .histbody b{color:var(--ink);font-weight:600;}
 
@@ -552,6 +553,7 @@
       <div class="headbtns">
         <button class="histBtn histBtn-primary" id="openDriverForm">Cadastro</button>
         <button class="histBtn" id="openReception">Recepção</button>
+        <button class="histBtn" id="openRH">RH</button>
         <button class="histBtn" id="openHistory">Admin</button>
       </div>
     </div>
@@ -731,6 +733,11 @@
       <input type="checkbox" id="dTerm4">
       <span>Autorizo o uso dos meus dados pessoais (nome, CPF, CNH e foto do documento) exclusivamente para fins de controle interno de uso do veículo da empresa, conforme a LGPD (Lei Geral de Proteção de Dados).</span>
     </label>
+    <label class="checkline">
+      <input type="checkbox" id="dTerm5">
+      <span>Declaro ter lido e concordar integralmente com a Política de Utilização do Veículo da empresa, comprometendo-me a segui-la em todas as reservas e usos do carro.</span>
+    </label>
+    <p style="font-size:11.5px;color:var(--muted);margin:0 0 .8rem;line-height:1.5;">Após enviar, seu cadastro fica <b>pendente de aprovação</b> pelo RH ou pelo Administrador. Você só poderá agendar o carro depois da liberação.</p>
 
     <div class="modalbtns">
       <button class="btn-cancel" id="cancelDriverForm">Cancelar</button>
@@ -777,6 +784,33 @@
     <div class="modalbtns">
       <button class="btn-cancel" id="confirmNo">Voltar</button>
       <button class="btn-save" id="confirmYes" style="background:var(--busy);color:#fff;">Cancelar reserva</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="rhPinOverlay">
+  <div class="modal">
+    <h3>Acesso do RH</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 1rem;">Informe o PIN do RH para revisar e aprovar cadastros de motoristas.</p>
+    <div class="errbox" id="rhPinErrbox"></div>
+    <div class="field">
+      <label for="fRhPin">PIN do RH</label>
+      <input type="password" id="fRhPin" inputmode="numeric" placeholder="••••" autocomplete="off">
+    </div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="cancelRhPin">Cancelar</button>
+      <button class="btn-save" id="submitRhPin">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="rhOverlay">
+  <div class="modal modal-admin">
+    <h3>Aprovação de cadastros \u2014 RH</h3>
+    <p class="paneNote">Cadastros de motoristas aguardando aprovação. Confira a foto da CNH antes de aprovar ou rejeitar.</p>
+    <div id="rhPendingList"><div class="loading">Carregando cadastros…</div></div>
+    <div class="modalbtns">
+      <button class="btn-cancel" id="closeRh">Fechar</button>
     </div>
   </div>
 </div>
@@ -874,6 +908,8 @@ const ADMIN_PIN = '2026';
 let isAdminUnlocked = false;
 const RECEPTION_PIN = '4321';
 let isReceptionUnlocked = false;
+const RH_PIN = '5050';
+let isRhUnlocked = false;
 
 function getDayHours(dateISO){
   const dow = parseISODate(dateISO).getDay();
@@ -1067,7 +1103,7 @@ async function loadUsers(){
   try{
     const { data, error } = await supabaseClient
       .from('drivers')
-      .select('key,name,sector,pin,cpf,cnh,accepted_at');
+      .select('key,name,sector,pin,cpf,cnh,accepted_at,status');
     if(error){
       console.error('[Supabase] Erro ao LER motoristas: ' + describeError(error));
       showConfigWarning('<b>Erro ao ler cadastro de motoristas.</b> Detalhe: '+escapeHtmlSafe(describeError(error))+'.');
@@ -1078,7 +1114,8 @@ async function loadUsers(){
     (data || []).forEach(row => {
       users[row.key] = {
         name: row.name, sector: row.sector, pin: row.pin,
-        cpf: row.cpf, cnh: row.cnh, acceptedAt: row.accepted_at
+        cpf: row.cpf, cnh: row.cnh, acceptedAt: row.accepted_at,
+        status: row.status || 'pendente'
       };
     });
   }catch(e){
@@ -1101,7 +1138,8 @@ async function registerDriver(record){
         cnh_photo: record.cnhPhoto,
         pin: record.pin,
         accepted_at: record.acceptedAt,
-        terms_version: record.termsVersion
+        terms_version: record.termsVersion,
+        status: 'pendente'
       });
     if(error) return { ok:false, error: describeError(error) };
     return { ok:true };
@@ -1116,6 +1154,20 @@ async function updateDriverPin(key, newPin){
     const { error } = await supabaseClient
       .from('drivers')
       .update({ pin: newPin })
+      .eq('key', key);
+    if(error) return { ok:false, error: describeError(error) };
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: describeError(e) };
+  }
+}
+
+async function updateDriverStatus(key, status){
+  if(!supabaseReady) return { ok:false, error:'Supabase não configurado.' };
+  try{
+    const { error } = await supabaseClient
+      .from('drivers')
+      .update({ status })
       .eq('key', key);
     if(error) return { ok:false, error: describeError(error) };
     return { ok:true };
@@ -1583,6 +1635,7 @@ function resetDriverForm(){
   document.getElementById('dTerm2').checked = false;
   document.getElementById('dTerm3').checked = false;
   document.getElementById('dTerm4').checked = false;
+  document.getElementById('dTerm5').checked = false;
   driverPhotoDataUrl = null;
 }
 document.getElementById('openDriverForm').addEventListener('click', ()=>{
@@ -1618,7 +1671,8 @@ document.getElementById('saveDriverForm').addEventListener('click', async ()=>{
   if(!/^\d{4}$/.test(pin)) return fail('O PIN deve ter 4 dígitos numéricos.');
   if(pin !== pinConfirm) return fail('A confirmação do PIN não confere.');
   if(!document.getElementById('dTerm1').checked || !document.getElementById('dTerm2').checked ||
-     !document.getElementById('dTerm3').checked || !document.getElementById('dTerm4').checked){
+     !document.getElementById('dTerm3').checked || !document.getElementById('dTerm4').checked ||
+     !document.getElementById('dTerm5').checked){
     return fail('É necessário concordar com todas as declarações para concluir o cadastro.');
   }
 
@@ -1643,7 +1697,7 @@ document.getElementById('saveDriverForm').addEventListener('click', async ()=>{
       return;
     }
     driverOverlay.classList.remove('open');
-    showToast('Cadastro concluído! Agora você já pode agendar o carro.');
+    showToast('Cadastro enviado! Aguarde a aprovação do RH/Administrador para agendar.');
   }catch(e){
     fail('Não foi possível concluir o cadastro. Tente novamente.');
   }finally{
@@ -1764,9 +1818,17 @@ function updateUserHint(){
   }
   const u = findUser(nameVal);
   if(u){
-    hint.textContent = `Motorista cadastrado \u00b7 informe seu PIN para confirmar.`;
-    hint.className = 'userhint knownuser';
     sectorInput.value = u.sector || '';
+    if(u.status === 'aprovado'){
+      hint.textContent = `Motorista cadastrado \u00b7 informe seu PIN para confirmar.`;
+      hint.className = 'userhint knownuser';
+    }else if(u.status === 'rejeitado'){
+      hint.textContent = `Cadastro não aprovado. Procure o RH ou o Administrador.`;
+      hint.className = 'userhint newuser';
+    }else{
+      hint.textContent = `Cadastro pendente de aprovação pelo RH/Administrador \u2014 aguarde a liberação para agendar.`;
+      hint.className = 'userhint newuser';
+    }
   }else{
     hint.innerHTML = `Motorista não encontrado. Use o botão <b>"Cadastro"</b> no topo da página antes de agendar.`;
     hint.className = 'userhint newuser';
@@ -1845,6 +1907,12 @@ document.getElementById('saveBooking').addEventListener('click', async ()=>{
   }
   if(existingUser.pin !== userPin){
     return fail('PIN incorreto para este nome.');
+  }
+  if(existingUser.status === 'rejeitado'){
+    return fail('Seu cadastro não foi aprovado. Procure o RH ou o Administrador.');
+  }
+  if(existingUser.status !== 'aprovado'){
+    return fail('Seu cadastro ainda está pendente de aprovação pelo RH ou Administrador. Aguarde a liberação antes de agendar.');
   }
 
   if(!start || !end) return fail('Informe o horário de início e término.');
@@ -1934,28 +2002,76 @@ function renderUsersList(){
     el.innerHTML = `<p style="font-size:12.5px;color:var(--muted);">Nenhum usuário cadastrado ainda.</p>`;
     return;
   }
-  el.innerHTML = list.map(u => `
+  el.innerHTML = list.map(u => {
+    const status = u.status || 'pendente';
+    const statusLabel = status === 'aprovado' ? 'Aprovado' : (status === 'rejeitado' ? 'Rejeitado' : 'Pendente');
+    const statusClass = status === 'aprovado' ? 'ativo' : (status === 'rejeitado' ? 'cancelado' : 'pendente');
+    const key = escapeHtml(userKey(u.name));
+    return `
     <div class="histcard">
       <div class="histtop">
-        <div class="histbody"><b>${escapeHtml(u.name)}</b> \u00b7 ${escapeHtml(u.sector || '\u2014')}<br>CPF: ${escapeHtml(u.cpf || '\u2014')} \u00b7 CNH: ${escapeHtml(u.cnh || '\u2014')}</div>
+        <div class="histbody">
+          <b>${escapeHtml(u.name)}</b> \u00b7 ${escapeHtml(u.sector || '\u2014')}
+          <span class="histstatus ${statusClass}" style="margin-left:.4rem;">${statusLabel}</span>
+          <br>CPF: ${escapeHtml(u.cpf || '\u2014')} \u00b7 CNH: ${escapeHtml(u.cnh || '\u2014')}
+        </div>
         <div style="display:flex;flex-direction:column;gap:.35rem;">
-          <button class="viewCnhBtn" data-key="${escapeHtml(userKey(u.name))}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Ver CNH</button>
-          <button class="resetPinBtn" data-key="${escapeHtml(userKey(u.name))}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Redefinir PIN</button>
+          <button class="viewCnhBtn" data-key="${key}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Ver CNH</button>
+          <button class="resetPinBtn" data-key="${key}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">Redefinir PIN</button>
         </div>
       </div>
-      <div class="cnhPreviewWrap" data-key="${escapeHtml(userKey(u.name))}" style="display:none;margin-top:.5rem;"></div>
-      <div class="resetPinForm" data-key="${escapeHtml(userKey(u.name))}" style="display:none;margin-top:.5rem;">
+      ${status !== 'aprovado' ? `
+      <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+        <button class="approveBtn" data-key="${key}" style="flex:1;background:var(--free);color:#fff;border:none;border-radius:6px;padding:.4rem;font-size:11.5px;cursor:pointer;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.02em;">Aprovar cadastro</button>
+        <button class="rejectBtn" data-key="${key}" style="flex:1;background:transparent;color:var(--busy);border:1px solid var(--busy);border-radius:6px;padding:.4rem;font-size:11.5px;cursor:pointer;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.02em;">Rejeitar</button>
+      </div>` : ''}
+      <div class="cnhPreviewWrap" data-key="${key}" style="display:none;margin-top:.5rem;"></div>
+      <div class="resetPinForm" data-key="${key}" style="display:none;margin-top:.5rem;">
         <div class="recform">
           <div class="rf">
             <label>Novo PIN (4 dígitos)</label>
             <input type="password" class="newPinInput" inputmode="numeric" placeholder="4 dígitos">
           </div>
-          <button class="confirmResetPinBtn" data-key="${escapeHtml(userKey(u.name))}">Salvar</button>
+          <button class="confirmResetPinBtn" data-key="${key}">Salvar</button>
         </div>
         <p class="resetPinErr" style="display:none;color:var(--busy);font-size:11.5px;margin:.4rem 0 0;"></p>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+
+  el.querySelectorAll('.approveBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      btn.textContent = 'Aprovando…';
+      const result = await updateDriverStatus(btn.dataset.key, 'aprovado');
+      if(result.ok){
+        showToast('Cadastro aprovado');
+        await loadUsers();
+        renderUsersList();
+      }else{
+        showToast('Erro ao aprovar: ' + result.error);
+        btn.disabled = false;
+        btn.textContent = 'Aprovar cadastro';
+      }
+    });
+  });
+  el.querySelectorAll('.rejectBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      btn.textContent = 'Rejeitando…';
+      const result = await updateDriverStatus(btn.dataset.key, 'rejeitado');
+      if(result.ok){
+        showToast('Cadastro rejeitado');
+        await loadUsers();
+        renderUsersList();
+      }else{
+        showToast('Erro ao rejeitar: ' + result.error);
+        btn.disabled = false;
+        btn.textContent = 'Rejeitar';
+      }
+    });
+  });
 
   el.querySelectorAll('.viewCnhBtn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
@@ -2090,6 +2206,132 @@ document.getElementById('exitReception').addEventListener('click', ()=>{
   document.getElementById('receptionBanner').style.display = 'none';
   renderAll();
 });
+
+const rhPinOverlay = document.getElementById('rhPinOverlay');
+const rhOverlay = document.getElementById('rhOverlay');
+
+document.getElementById('openRH').addEventListener('click', async ()=>{
+  if(isRhUnlocked){
+    await openRhPanel();
+    return;
+  }
+  document.getElementById('rhPinErrbox').style.display = 'none';
+  document.getElementById('fRhPin').value = '';
+  rhPinOverlay.classList.add('open');
+  document.getElementById('fRhPin').focus();
+});
+document.getElementById('cancelRhPin').addEventListener('click', ()=>{
+  rhPinOverlay.classList.remove('open');
+});
+rhPinOverlay.addEventListener('click', (e)=>{
+  if(e.target === rhPinOverlay) rhPinOverlay.classList.remove('open');
+});
+async function trySubmitRhPin(){
+  const errbox = document.getElementById('rhPinErrbox');
+  const val = document.getElementById('fRhPin').value.trim();
+  if(val === RH_PIN){
+    isRhUnlocked = true;
+    rhPinOverlay.classList.remove('open');
+    errbox.style.display = 'none';
+    await openRhPanel();
+  }else{
+    errbox.textContent = 'PIN incorreto.';
+    errbox.style.display = 'block';
+  }
+}
+document.getElementById('submitRhPin').addEventListener('click', trySubmitRhPin);
+document.getElementById('fRhPin').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') trySubmitRhPin();
+});
+document.getElementById('closeRh').addEventListener('click', ()=>{
+  rhOverlay.classList.remove('open');
+});
+rhOverlay.addEventListener('click', (e)=>{
+  if(e.target === rhOverlay) rhOverlay.classList.remove('open');
+});
+
+async function openRhPanel(){
+  rhOverlay.classList.add('open');
+  document.getElementById('rhPendingList').innerHTML = '<div class="loading">Carregando cadastros…</div>';
+  await loadUsers();
+  renderRhPendingList();
+}
+
+function renderRhPendingList(){
+  const el = document.getElementById('rhPendingList');
+  const list = Object.values(users)
+    .filter(u => (u.status || 'pendente') === 'pendente')
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty"><b>Nenhum cadastro pendente</b>Todos os cadastros já foram avaliados.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(u => {
+    const key = escapeHtml(userKey(u.name));
+    return `
+    <div class="histcard">
+      <div class="histbody">
+        <b>${escapeHtml(u.name)}</b> \u00b7 ${escapeHtml(u.sector || '\u2014')}<br>
+        CPF: ${escapeHtml(u.cpf || '\u2014')} \u00b7 CNH: ${escapeHtml(u.cnh || '\u2014')}
+      </div>
+      <div style="display:flex;gap:.6rem;margin-top:.6rem;">
+        <button class="rhViewCnhBtn" data-key="${key}" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.4rem .6rem;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;">Ver CNH</button>
+        <button class="rhApproveBtn" data-key="${key}" style="flex:1;background:var(--free);color:#fff;border:none;border-radius:6px;padding:.4rem;font-size:11.5px;cursor:pointer;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.02em;">Aprovar</button>
+        <button class="rhRejectBtn" data-key="${key}" style="flex:1;background:transparent;color:var(--busy);border:1px solid var(--busy);border-radius:6px;padding:.4rem;font-size:11.5px;cursor:pointer;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.02em;">Rejeitar</button>
+      </div>
+      <div class="rhCnhPreview" data-key="${key}" style="display:none;margin-top:.5rem;"></div>
+    </div>
+  `;
+  }).join('');
+
+  el.querySelectorAll('.rhViewCnhBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const key = btn.dataset.key;
+      const wrap = el.querySelector(`.rhCnhPreview[data-key="${key}"]`);
+      const isOpen = wrap.style.display === 'block';
+      el.querySelectorAll('.rhCnhPreview').forEach(w => w.style.display = 'none');
+      if(isOpen){ wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      wrap.innerHTML = '<p style="font-size:11.5px;color:var(--muted);">Carregando foto…</p>';
+      const photo = await fetchDriverPhoto(key);
+      wrap.innerHTML = photo
+        ? `<img src="${photo}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--line);display:block;">`
+        : '<p style="font-size:11.5px;color:var(--muted);">Nenhuma foto de CNH cadastrada.</p>';
+    });
+  });
+  el.querySelectorAll('.rhApproveBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      btn.textContent = 'Aprovando…';
+      const result = await updateDriverStatus(btn.dataset.key, 'aprovado');
+      if(result.ok){
+        showToast('Cadastro aprovado');
+        await loadUsers();
+        renderRhPendingList();
+      }else{
+        showToast('Erro ao aprovar: ' + result.error);
+        btn.disabled = false;
+        btn.textContent = 'Aprovar';
+      }
+    });
+  });
+  el.querySelectorAll('.rhRejectBtn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      btn.textContent = 'Rejeitando…';
+      const result = await updateDriverStatus(btn.dataset.key, 'rejeitado');
+      if(result.ok){
+        showToast('Cadastro rejeitado');
+        await loadUsers();
+        renderRhPendingList();
+      }else{
+        showToast('Erro ao rejeitar: ' + result.error);
+        btn.disabled = false;
+        btn.textContent = 'Rejeitar';
+      }
+    });
+  });
+}
 
 document.getElementById('closeHistory').addEventListener('click', ()=>{
   histOverlay.classList.remove('open');
